@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_red">#C8102E</color>
+    <color name="brand_red_dark">#9E0B22</color>
+    <color name="brand_red_soft">#FDECEF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="bg_app">#F4F5F7</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="stroke">#E3E5E9</color>
+    <color name="text_primary">#1E2228</color>
+    <color name="text_secondary">#5F6672</color>
+    <color name="text_hint">#9AA1AD</color>
+
+    <color name="status_new">#3B6FD4</color>
+    <color name="status_pending">#E08A00</color>
+    <color name="status_preparing">#8E44AD</color>
+    <color name="status_ready">#0E9F6E</color>
+    <color name="status_done">#2E7D32</color>
+    <color name="status_cancelled">#B71C1C</color>
+
+    <color name="success">#2E7D32</color>
+    <color name="warning">#E08A00</color>
+    <color name="error">#B71C1C</color>
+
+    <color name="icon_bg">#C8102E</color>
+</resources>
