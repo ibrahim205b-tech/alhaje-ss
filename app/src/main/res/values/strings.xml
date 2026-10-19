@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">دليفري الحجي</string>
+    <string name="restaurant_name">مطعم الحجي</string>
+    <string name="currency">د.ع</string>
+
+    <string name="ok">موافق</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="close">إغلاق</string>
+    <string name="back">رجوع</string>
+</resources>
