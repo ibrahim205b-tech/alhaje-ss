@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/Haji.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:text="اسم الزبون" />
+
+        <EditText
+            android:id="@+id/etCustomerName"
+            style="@style/Haji.Input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:maxLines="1" />
+
+        <TextView
+            style="@style/Haji.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="رقم هاتف الزبون" />
+
+        <EditText
+            android:id="@+id/etPhone"
+            style="@style/Haji.Input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:maxLines="1" />
+
+        <LinearLayout
+            android:id="@+id/groupDelivery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Haji.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="عنوان التوصيل (مطلوب)" />
+
+            <EditText
+                android:id="@+id/etAddress"
+                style="@style/Haji.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="2" />
+
+            <TextView
+                style="@style/Haji.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="اسم السائق" />
+
+            <EditText
+                android:id="@+id/etDriver"
+                style="@style/Haji.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:maxLines="1" />
+
+            <TextView
+                style="@style/Haji.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="أجور التوصيل (د.ع)" />
+
+            <EditText
+                android:id="@+id/etDeliveryFee"
+                style="@style/Haji.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLines="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/groupDiscount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Haji.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="الخصم (د.ع)" />
+
+            <EditText
+                android:id="@+id/etDiscount"
+                style="@style/Haji.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLines="1" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/Haji.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ملاحظات الطلب" />
+
+        <EditText
+            android:id="@+id/etNotes"
+            style="@style/Haji.Input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textCapSentences"
+            android:minLines="2" />
+    </LinearLayout>
+</ScrollView>
