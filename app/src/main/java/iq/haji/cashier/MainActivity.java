@@ -1,3 +1,4 @@
+
 package iq.haji.cashier;
 
 import android.content.Intent;
@@ -45,12 +46,15 @@ import iq.haji.cashier.util.PinDialog;
 import iq.haji.cashier.util.Ui;
 
 /**
- * شاشة الكاشير. الطلب الجاري يُحفظ كمسودة تلقائياً. زر «طباعة الفاتورة» هو الوحيد الذي ينشئ رقم الطلب،
- * وبعده يُقفل الطلب حتى تنجح الطباعة أو يُلغى، فلا تتكرر الفاتورة عند إعادة المحاولة.
+ * شاشة الكاشير. الطلب الجاري يُحفظ كمسودة تلقائياً.
  */
 public class MainActivity extends BaseActivity implements PrinterManager.StateListener {
 
-    private static final String[] TYPE_CODES = {OrderType.TAKEAWAY, OrderType.DELIVERY, OrderType.DINE_IN};
+    private static final String[] TYPE_CODES = {
+            OrderType.TAKEAWAY,
+            OrderType.DELIVERY,
+            OrderType.DINE_IN
+    };
 
     private CatalogRepository catalog;
     private OrderRepository orders;
@@ -65,8 +69,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private boolean firstRunShown = false;
     private boolean printing = false;
 
-    private TextView chipShift, chipPrinter, tvOrderNo, tvOrderTime, tvLockedBanner, tvDetailsSummary;
-    private TextView tvEmptyOrder, tvNoProducts, tvSubtotal, tvDiscount, tvDelivery, tvTotal, btnPrint;
+    private TextView chipShift, chipPrinter, tvOrderNo, tvOrderTime,
+            tvLockedBanner, tvDetailsSummary;
+    private TextView tvEmptyOrder, tvNoProducts, tvSubtotal,
+            tvDiscount, tvDelivery, tvTotal, btnPrint;
     private TextView btnCancelOrder, btnNewOrder;
     private View rowDiscount, rowDelivery;
     private final TextView[] typeViews = new TextView[3];
@@ -75,8 +81,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private ProductAdapter productAdapter;
     private CategoryAdapter categoryAdapter;
     private OrderLineAdapter lineAdapter;
-
-    // ======================= دورة الحياة =======================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,19 +114,40 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     @Override
     protected void onResume() {
         super.onResume();
+
         syncCurrentWithDb();
+        applyPendingCallerNumber();
         reloadCatalog();
         refreshOrderUi();
         refreshChips();
         maybeShowFirstRun();
     }
 
+    /**
+     * يقرأ رقم المتصل الذي حفظته خدمة المكالمات ويضعه في الطلب الجاري.
+     */
+    private void applyPendingCallerNumber() {
+        String phone = CallNumberStore.consume(this);
+
+        if (phone == null || phone.trim().isEmpty()) {
+            return;
+        }
+
+        if (current == null || current.id != 0 || printing) {
+            CallNumberStore.save(this, phone);
+            return;
+        }
+
+        current.phone = Fmt.normalizeDigits(phone);
+        persist();
+
+        Ui.toast(this, "تم إدراج رقم الزبون تلقائياً");
+    }
+
     @Override
     public void onStateChanged(PrinterManager.State state, String message) {
         refreshPrinterChip();
     }
-
-    // ======================= تهيئة الواجهة =======================
 
     private void bindViews() {
         chipShift = findViewById(R.id.chipShift);
@@ -149,7 +174,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void setupLists() {
-        // عدد أعمدة الأصناف حسب عرض الشاشة (≈ 60% من العرض، بطاقة ≈ 170dp)
         int widthDp = getResources().getConfiguration().screenWidthDp;
         int span = Math.max(2, (int) (widthDp * 0.6f - 24) / 170);
 
@@ -159,7 +183,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         rvProducts.setAdapter(productAdapter);
 
         RecyclerView rvCategories = findViewById(R.id.rvCategories);
-        rvCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvCategories.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         categoryAdapter = new CategoryAdapter(id -> {
             selectedCategory = id;
             categoryAdapter.setSelected(id);
@@ -170,23 +195,23 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         rvLines.setLayoutManager(new LinearLayoutManager(this));
         lineAdapter = new OrderLineAdapter(new OrderLineAdapter.Listener() {
             @Override
-            public void onPlus(OrderLine l) {
-                changeQty(l, +1);
+            public void onPlus(OrderLine line) {
+                changeQty(line, +1);
             }
 
             @Override
-            public void onMinus(OrderLine l) {
-                changeQty(l, -1);
+            public void onMinus(OrderLine line) {
+                changeQty(line, -1);
             }
 
             @Override
-            public void onDelete(OrderLine l) {
-                removeLine(l);
+            public void onDelete(OrderLine line) {
+                removeLine(line);
             }
 
             @Override
-            public void onNote(OrderLine l) {
-                editNote(l);
+            public void onNote(OrderLine line) {
+                editNote(line);
             }
         });
         rvLines.setAdapter(lineAdapter);
@@ -210,12 +235,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         EditText etSearch = findViewById(R.id.etSearch);
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int a, int b, int c) {
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int a, int b, int c) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -223,10 +246,15 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 applyFilter();
             }
         });
-        etSearch.setOnEditorActionListener((v, actionId, e) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+        etSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH
+                    || actionId == EditorInfo.IME_ACTION_DONE) {
+                InputMethodManager imm =
+                        (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
                 v.clearFocus();
                 return true;
             }
@@ -243,8 +271,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         startActivity(new Intent(this, cls));
     }
 
-    // ======================= حالة الطلب =======================
-
     private boolean locked() {
         return current != null && current.id != 0;
     }
@@ -252,19 +278,23 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private void loadInitialOrder() {
         List<Order> pending = orders.listPendingPrint();
         if (!pending.isEmpty()) {
-            Order o = orders.getOrder(pending.get(0).id);
-            if (o != null) {
-                current = o;
+            Order order = orders.getOrder(pending.get(0).id);
+            if (order != null) {
+                current = order;
                 if (pending.size() > 1) {
-                    Ui.toast(this, "يوجد " + pending.size() + " طلبات بانتظار الطباعة. الأحدث معروض هنا والبقية في شاشة الطلبات.");
+                    Ui.toast(this, "يوجد " + pending.size()
+                            + " طلبات بانتظار الطباعة. الأحدث معروض هنا والبقية في شاشة الطلبات.");
                 }
                 return;
             }
         }
+
         Order draft = orders.loadDraft();
         if (draft != null) {
             current = draft;
-            if (current.createdAt == 0) current.createdAt = System.currentTimeMillis();
+            if (current.createdAt == 0) {
+                current.createdAt = System.currentTimeMillis();
+            }
             normalizeType();
         } else {
             newOrder();
@@ -276,8 +306,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         current.createdAt = System.currentTimeMillis();
         current.type = TYPE_CODES[0];
         normalizeType();
+
         if (OrderType.DELIVERY.equals(current.type)) {
-            current.deliveryFee = settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
+            current.deliveryFee =
+                    settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
         }
     }
 
@@ -287,25 +319,33 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         refreshOrderUi();
     }
 
-    /** إذا تغيّر الطلب المقفل من شاشة أخرى (طُبع أو أُلغي) نبدأ طلباً جديداً. */
     private void syncCurrentWithDb() {
         if (printing || current == null || current.id == 0) return;
+
         Order fresh = orders.getOrder(current.id);
-        if (fresh == null || !OrderStatus.PENDING_PRINT.equals(fresh.status)) newOrder();
-        else current = fresh;
+        if (fresh == null || !OrderStatus.PENDING_PRINT.equals(fresh.status)) {
+            newOrder();
+        } else {
+            current = fresh;
+        }
     }
 
-    private boolean typeEnabled(String t) {
-        if (OrderType.DELIVERY.equals(t)) return settings.getBool(AppSettings.ENABLE_DELIVERY, true);
-        if (OrderType.DINE_IN.equals(t)) return settings.getBool(AppSettings.ENABLE_DINE_IN, true);
+    private boolean typeEnabled(String type) {
+        if (OrderType.DELIVERY.equals(type)) {
+            return settings.getBool(AppSettings.ENABLE_DELIVERY, true);
+        }
+        if (OrderType.DINE_IN.equals(type)) {
+            return settings.getBool(AppSettings.ENABLE_DINE_IN, true);
+        }
         return settings.getBool(AppSettings.ENABLE_TAKEAWAY, true);
     }
 
     private void normalizeType() {
         if (typeEnabled(current.type)) return;
-        for (String t : TYPE_CODES) {
-            if (typeEnabled(t)) {
-                current.type = t;
+
+        for (String type : TYPE_CODES) {
+            if (typeEnabled(type)) {
+                current.type = type;
                 return;
             }
         }
@@ -313,49 +353,66 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void persist() {
         current.recalc();
-        if (!locked()) orders.saveDraft(current);
+        if (!locked()) {
+            orders.saveDraft(current);
+        }
         refreshOrderUi();
     }
 
     private void toastLocked() {
-        Ui.toast(this, "الطلب رقم " + current.id + " محفوظ بانتظار الطباعة. أعد المحاولة أو ألغِه.");
+        Ui.toast(this, "الطلب رقم " + current.id
+                + " محفوظ بانتظار الطباعة. أعد المحاولة أو ألغِه.");
     }
 
-    private void setType(String t) {
+    private void setType(String type) {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
-        current.type = t;
-        if (OrderType.DELIVERY.equals(t) && current.deliveryFee == 0) {
-            current.deliveryFee = settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
+
+        current.type = type;
+        if (OrderType.DELIVERY.equals(type) && current.deliveryFee == 0) {
+            current.deliveryFee =
+                    settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
         }
         persist();
     }
 
-    // ======================= الأصناف =======================
-
     private void reloadCatalog() {
-        List<Category> cats = catalog.getCategories(true);
+        List<Category> categories = catalog.getCategories(true);
         boolean found = selectedCategory == 0;
-        for (Category c : cats) if (c.id == selectedCategory) found = true;
+
+        for (Category category : categories) {
+            if (category.id == selectedCategory) found = true;
+        }
+
         if (!found) selectedCategory = 0;
-        categoryAdapter.setCategories(cats, selectedCategory);
+
+        categoryAdapter.setCategories(categories, selectedCategory);
         allProducts = catalog.getProducts(0, null, true);
         applyFilter();
     }
 
     private void applyFilter() {
-        String q = ArabicText.normalize(query);
-        List<Product> out = new ArrayList<>();
-        for (Product p : allProducts) {
-            if (selectedCategory > 0 && p.categoryId != selectedCategory) continue;
-            if (!q.isEmpty() && !ArabicText.normalize(p.name).contains(q)) continue;
-            out.add(p);
+        String normalizedQuery = ArabicText.normalize(query);
+        List<Product> filtered = new ArrayList<>();
+
+        for (Product product : allProducts) {
+            if (selectedCategory > 0 && product.categoryId != selectedCategory) {
+                continue;
+            }
+            if (!normalizedQuery.isEmpty()
+                    && !ArabicText.normalize(product.name).contains(normalizedQuery)) {
+                continue;
+            }
+            filtered.add(product);
         }
-        productAdapter.setItems(out);
-        if (out.isEmpty()) {
+
+        productAdapter.setItems(filtered);
+
+        if (filtered.isEmpty()) {
             tvNoProducts.setText(allProducts.isEmpty()
                     ? "لا توجد أصناف. أضف أصنافاً من شاشة «الأصناف»."
                     : "لا توجد أصناف مطابقة");
@@ -365,225 +422,290 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
     }
 
-    private void addProduct(Product p) {
+    private void addProduct(Product product) {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
-        for (OrderLine l : current.lines) {
-            if (l.productId == p.id && (l.note == null || l.note.trim().isEmpty())) {
-                if (l.qty < 999) l.qty++;
+
+        for (OrderLine line : current.lines) {
+            if (line.productId == product.id
+                    && (line.note == null || line.note.trim().isEmpty())) {
+                if (line.qty < 999) line.qty++;
                 persist();
                 return;
             }
         }
-        OrderLine l = new OrderLine();
-        l.productId = p.id;
-        l.name = p.name;
-        l.unitPrice = p.price;
-        l.qty = 1;
-        current.lines.add(l);
+
+        OrderLine line = new OrderLine();
+        line.productId = product.id;
+        line.name = product.name;
+        line.unitPrice = product.price;
+        line.qty = 1;
+        current.lines.add(line);
+
         persist();
         rvLines.scrollToPosition(current.lines.size() - 1);
     }
 
-    private void changeQty(OrderLine l, int delta) {
+    private void changeQty(OrderLine line, int delta) {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
-        int q = Math.max(1, Math.min(999, l.qty + delta));
-        l.qty = q;
+
+        line.qty = Math.max(1, Math.min(999, line.qty + delta));
         persist();
     }
 
-    private void removeLine(OrderLine l) {
+    private void removeLine(OrderLine line) {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
-        current.lines.remove(l);
+
+        current.lines.remove(line);
         persist();
     }
 
-    private void editNote(final OrderLine l) {
+    private void editNote(final OrderLine line) {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
-        final EditText et = Ui.editText(this, "مثال: بدون بصل، حجم كبير، زيادة جبن",
+
+        final EditText edit = Ui.editText(
+                this,
+                "مثال: بدون بصل، حجم كبير، زيادة جبن",
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
-                l.note == null ? "" : l.note);
-        AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("ملاحظة على: " + l.name)
-                .setView(Ui.wrap(this, et))
-                .setPositiveButton(R.string.save, (dd, w) -> {
-                    String n = et.getText().toString().trim();
-                    if (n.length() > 80) n = n.substring(0, 80);
-                    l.note = n;
+                line.note == null ? "" : line.note);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("ملاحظة على: " + line.name)
+                .setView(Ui.wrap(this, edit))
+                .setPositiveButton(R.string.save, (d, w) -> {
+                    String note = edit.getText().toString().trim();
+                    if (note.length() > 80) {
+                        note = note.substring(0, 80);
+                    }
+                    line.note = note;
                     persist();
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .create();
-        Ui.showRtl(d);
-    }
 
-    // ======================= بيانات الطلب =======================
+        Ui.showRtl(dialog);
+    }
 
     private void showDetailsDialog() {
         if (printing) return;
+
         if (locked()) {
             Ui.toast(this, "الطلب محفوظ ولا يمكن تعديل بياناته");
             return;
         }
-        final boolean delivery = OrderType.DELIVERY.equals(current.type);
-        final boolean allowDiscount = settings.getBool(AppSettings.ALLOW_DISCOUNT, true);
 
-        View v = getLayoutInflater().inflate(R.layout.dialog_order_details, null);
-        v.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        final EditText etName = v.findViewById(R.id.etCustomerName);
-        final EditText etPhone = v.findViewById(R.id.etPhone);
-        final EditText etAddress = v.findViewById(R.id.etAddress);
-        final EditText etDriver = v.findViewById(R.id.etDriver);
-        final EditText etFee = v.findViewById(R.id.etDeliveryFee);
-        final EditText etDisc = v.findViewById(R.id.etDiscount);
-        final EditText etNotes = v.findViewById(R.id.etNotes);
-        v.findViewById(R.id.groupDelivery).setVisibility(delivery ? View.VISIBLE : View.GONE);
-        v.findViewById(R.id.groupDiscount).setVisibility(allowDiscount ? View.VISIBLE : View.GONE);
+        final boolean delivery = OrderType.DELIVERY.equals(current.type);
+        final boolean allowDiscount =
+                settings.getBool(AppSettings.ALLOW_DISCOUNT, true);
+
+        View view = getLayoutInflater().inflate(
+                R.layout.dialog_order_details, null);
+        view.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        final EditText etName = view.findViewById(R.id.etCustomerName);
+        final EditText etPhone = view.findViewById(R.id.etPhone);
+        final EditText etAddress = view.findViewById(R.id.etAddress);
+        final EditText etDriver = view.findViewById(R.id.etDriver);
+        final EditText etFee = view.findViewById(R.id.etDeliveryFee);
+        final EditText etDiscount = view.findViewById(R.id.etDiscount);
+        final EditText etNotes = view.findViewById(R.id.etNotes);
+
+        view.findViewById(R.id.groupDelivery)
+                .setVisibility(delivery ? View.VISIBLE : View.GONE);
+        view.findViewById(R.id.groupDiscount)
+                .setVisibility(allowDiscount ? View.VISIBLE : View.GONE);
 
         etName.setText(nz(current.customerName));
         etPhone.setText(nz(current.phone));
         etAddress.setText(nz(current.address));
         etDriver.setText(nz(current.driver));
-        if (current.deliveryFee > 0) etFee.setText(String.valueOf(current.deliveryFee));
-        if (current.discount > 0) etDisc.setText(String.valueOf(current.discount));
+
+        if (current.deliveryFee > 0) {
+            etFee.setText(String.valueOf(current.deliveryFee));
+        }
+        if (current.discount > 0) {
+            etDiscount.setText(String.valueOf(current.discount));
+        }
         etNotes.setText(nz(current.notes));
 
-        final AlertDialog d = new AlertDialog.Builder(this)
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("بيانات الطلب")
-                .setView(v)
+                .setView(view)
                 .setPositiveButton(R.string.save, null)
                 .setNegativeButton(R.string.cancel, null)
                 .create();
-        d.setOnShowListener(x -> d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(b -> {
-            long fee = 0;
-            long disc = 0;
-            if (delivery) {
-                String s = etFee.getText().toString().trim();
-                if (!s.isEmpty()) {
-                    fee = Fmt.parseMoney(s);
-                    if (fee < 0) {
-                        etFee.setError("مبلغ غير صحيح");
-                        return;
-                    }
-                }
-            }
-            if (allowDiscount) {
-                String s = etDisc.getText().toString().trim();
-                if (!s.isEmpty()) {
-                    disc = Fmt.parseMoney(s);
-                    if (disc < 0) {
-                        etDisc.setError("مبلغ غير صحيح");
-                        return;
-                    }
-                    if (disc > current.subtotal) {
-                        etDisc.setError("الخصم أكبر من مجموع الطلب");
-                        return;
-                    }
-                }
-            }
-            current.customerName = etName.getText().toString().trim();
-            current.phone = Fmt.normalizeDigits(etPhone.getText().toString());
-            current.notes = etNotes.getText().toString().trim();
-            if (delivery) {
-                current.address = etAddress.getText().toString().trim();
-                current.driver = etDriver.getText().toString().trim();
-                current.deliveryFee = fee;
-            }
-            if (allowDiscount) current.discount = disc;
-            d.dismiss();
-            persist();
-        }));
-        Ui.showRtl(d);
+
+        dialog.setOnShowListener(x ->
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                        .setOnClickListener(button -> {
+                            long fee = 0;
+                            long discount = 0;
+
+                            if (delivery) {
+                                String value = etFee.getText().toString().trim();
+                                if (!value.isEmpty()) {
+                                    fee = Fmt.parseMoney(value);
+                                    if (fee < 0) {
+                                        etFee.setError("مبلغ غير صحيح");
+                                        return;
+                                    }
+                                }
+                            }
+
+                            if (allowDiscount) {
+                                String value =
+                                        etDiscount.getText().toString().trim();
+
+                                if (!value.isEmpty()) {
+                                    discount = Fmt.parseMoney(value);
+                                    if (discount < 0) {
+                                        etDiscount.setError("مبلغ غير صحيح");
+                                        return;
+                                    }
+                                    if (discount > current.subtotal) {
+                                        etDiscount.setError(
+                                                "الخصم أكبر من مجموع الطلب");
+                                        return;
+                                    }
+                                }
+                            }
+
+                            current.customerName =
+                                    etName.getText().toString().trim();
+                            current.phone = Fmt.normalizeDigits(
+                                    etPhone.getText().toString());
+                            current.notes =
+                                    etNotes.getText().toString().trim();
+
+                            if (delivery) {
+                                current.address =
+                                        etAddress.getText().toString().trim();
+                                current.driver =
+                                        etDriver.getText().toString().trim();
+                                current.deliveryFee = fee;
+                            }
+
+                            if (allowDiscount) {
+                                current.discount = discount;
+                            }
+
+                            dialog.dismiss();
+                            persist();
+                        }));
+
+        Ui.showRtl(dialog);
     }
 
-    private static String nz(String s) {
-        return s == null ? "" : s;
+    private static String nz(String value) {
+        return value == null ? "" : value;
     }
 
-    private static boolean isBlank(String s) {
-        return s == null || s.trim().isEmpty();
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
-
-    // ======================= طلب جديد / إلغاء =======================
 
     private void onNewOrder() {
         if (printing) return;
+
         if (locked()) {
             toastLocked();
             return;
         }
+
         if (current.lines.isEmpty()) {
             resetOrder();
             return;
         }
-        confirm("طلب جديد", "سيتم تجاهل الطلب الحالي غير المطبوع. متابعة؟", "تجاهل وابدأ طلباً جديداً",
+
+        confirm(
+                "طلب جديد",
+                "سيتم تجاهل الطلب الحالي غير المطبوع. متابعة؟",
+                "تجاهل وابدأ طلباً جديداً",
                 this::resetOrder);
     }
 
     private void onCancelOrder() {
         if (printing) return;
+
         if (!locked()) {
             if (current.lines.isEmpty()) {
                 Ui.toast(this, "الطلب فارغ");
                 return;
             }
-            confirm("إلغاء الطلب", "حذف جميع أصناف الطلب الحالي؟ لم يُحفظ بعد ولن يظهر في السجل.", "حذف الطلب",
+
+            confirm(
+                    "إلغاء الطلب",
+                    "حذف جميع أصناف الطلب الحالي؟ لم يُحفظ بعد ولن يظهر في السجل.",
+                    "حذف الطلب",
                     this::resetOrder);
             return;
         }
+
         final long id = current.id;
-        final EditText reason = Ui.editText(this, "سبب الإلغاء (اختياري)", InputType.TYPE_CLASS_TEXT, "");
-        AlertDialog d = new AlertDialog.Builder(this)
+        final EditText reason = Ui.editText(
+                this, "سبب الإلغاء (اختياري)", InputType.TYPE_CLASS_TEXT, "");
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("إلغاء الطلب رقم " + id)
                 .setMessage("سيُسجَّل الطلب «ملغى» ويبقى في سجل الطلبات ولا يُحتسب في المبيعات.")
                 .setView(Ui.wrap(this, reason))
-                .setPositiveButton("إلغاء الطلب", (dd, w) -> {
+                .setPositiveButton("إلغاء الطلب", (d, w) -> {
                     final String why = reason.getText().toString().trim();
                     PinDialog.require(this, () -> doCancelSaved(id, why));
                 })
                 .setNegativeButton(R.string.back, null)
                 .create();
-        Ui.showRtl(d);
+
+        Ui.showRtl(dialog);
     }
 
-    private void doCancelSaved(long id, String why) {
+    private void doCancelSaved(long id, String reason) {
         try {
-            orders.cancelOrder(id, why);
+            orders.cancelOrder(id, reason);
         } catch (AppException e) {
             Ui.toast(this, e.getMessage());
             return;
         }
+
         newOrder();
         refreshOrderUi();
         Ui.toast(this, "أُلغي الطلب رقم " + id);
     }
 
-    private void confirm(String title, String msg, String positive, final Runnable onYes) {
-        AlertDialog d = new AlertDialog.Builder(this)
+    private void confirm(
+            String title,
+            String message,
+            String positive,
+            final Runnable onYes) {
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(title)
-                .setMessage(msg)
-                .setPositiveButton(positive, (dd, w) -> onYes.run())
+                .setMessage(message)
+                .setPositiveButton(positive, (d, w) -> onYes.run())
                 .setNegativeButton(R.string.back, null)
                 .create();
-        Ui.showRtl(d);
-    }
 
-    // ======================= الطباعة =======================
+        Ui.showRtl(dialog);
+    }
 
     private void onPrint() {
         if (printing || ReceiptPrinter.isBusy()) return;
@@ -593,115 +715,145 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 Ui.toast(this, "الطلب فارغ. أضف صنفاً أولاً.");
                 return;
             }
+
             if (shifts.getOpenShift() == null) {
                 showNoShiftDialog();
                 return;
             }
-            if (OrderType.DELIVERY.equals(current.type) && isBlank(current.address)) {
+
+            if (OrderType.DELIVERY.equals(current.type)
+                    && isBlank(current.address)) {
                 Ui.toast(this, "أدخل عنوان التوصيل لطلب الدليفري");
                 showDetailsDialog();
                 return;
             }
         }
+
         if (!PrinterManager.get(this).hasSelectedPrinter()) {
             showNoPrinterDialog();
             return;
         }
+
         setBusy(true);
         printer.printOrder(current, this::onPrintResult);
     }
 
-    private void setBusy(boolean b) {
-        printing = b;
+    private void setBusy(boolean busy) {
+        printing = busy;
         refreshOrderUi();
     }
 
-    private void onPrintResult(ReceiptPrinter.Result r) {
+    private void onPrintResult(ReceiptPrinter.Result result) {
         printing = false;
         if (isFinishing() || isDestroyed()) return;
 
-        if (r.success) {
-            ensurePrintedState(r.orderId);
+        if (result.success) {
+            ensurePrintedState(result.orderId);
             newOrder();
             refreshOrderUi();
-            showSuccess(r.message);
+            showSuccess(result.message);
             return;
         }
-        if (r.orderSaved && r.orderId != 0) {
-            Order fresh = orders.getOrder(r.orderId);
-            if (fresh != null && OrderStatus.PENDING_PRINT.equals(fresh.status)) {
+
+        if (result.orderSaved && result.orderId != 0) {
+            Order fresh = orders.getOrder(result.orderId);
+
+            if (fresh != null
+                    && OrderStatus.PENDING_PRINT.equals(fresh.status)) {
                 current = fresh;
             } else if (fresh != null) {
-                newOrder(); // مثلاً أُلغي من شاشة أخرى
+                newOrder();
             }
         }
+
         refreshOrderUi();
-        showFailure(r);
+        showFailure(result);
     }
 
-    /** إذا نجحت الطباعة لكن تحديث الحالة تعثّر، نحاول مرة أخرى بصمت. */
     private void ensurePrintedState(long orderId) {
         if (orderId == 0) return;
-        Order o = orders.getOrder(orderId);
-        if (o != null && OrderStatus.PENDING_PRINT.equals(o.status)) {
+
+        Order order = orders.getOrder(orderId);
+        if (order != null
+                && OrderStatus.PENDING_PRINT.equals(order.status)) {
             try {
                 orders.markPrinted(orderId);
             } catch (RuntimeException ignored) {
-                // الرسالة المعروضة تحذّر المستخدم من إعادة الطباعة
+                // يبقى الطلب محفوظاً ويمكن التحقق من حالته لاحقاً.
             }
         }
     }
 
-    private void showSuccess(String msg) {
-        Snackbar sb = Snackbar.make(findViewById(R.id.root), msg, Snackbar.LENGTH_LONG);
-        sb.setDuration(9000);
-        sb.setAction(R.string.ok, v -> {
-        });
-        View tv = sb.getView().findViewById(com.google.android.material.R.id.snackbar_text);
-        if (tv instanceof TextView) ((TextView) tv).setMaxLines(6);
-        sb.show();
+    private void showSuccess(String message) {
+        Snackbar snackbar = Snackbar.make(
+                findViewById(R.id.root), message, Snackbar.LENGTH_LONG);
+
+        snackbar.setDuration(9000);
+        snackbar.setAction(R.string.ok, v -> {});
+
+        View text = snackbar.getView().findViewById(
+                com.google.android.material.R.id.snackbar_text);
+
+        if (text instanceof TextView) {
+            ((TextView) text).setMaxLines(6);
+        }
+
+        snackbar.show();
     }
 
-    private void showFailure(ReceiptPrinter.Result r) {
-        AlertDialog.Builder b = new AlertDialog.Builder(this)
+    private void showFailure(ReceiptPrinter.Result result) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle("لم تتم الطباعة")
-                .setMessage(r.message)
-                .setNeutralButton("إعدادات الطابعة", (d, w) -> open(PrinterSettingsActivity.class));
-        if (r.orderSaved) {
-            b.setPositiveButton(R.string.retry, (d, w) -> onPrint());
-            b.setNegativeButton(R.string.close, null);
+                .setMessage(result.message)
+                .setNeutralButton(
+                        "إعدادات الطابعة",
+                        (d, w) -> open(PrinterSettingsActivity.class));
+
+        if (result.orderSaved) {
+            builder.setPositiveButton(
+                    R.string.retry, (d, w) -> onPrint());
+            builder.setNegativeButton(R.string.close, null);
         } else {
-            b.setPositiveButton(R.string.ok, null);
+            builder.setPositiveButton(R.string.ok, null);
         }
-        Ui.showRtl(b.create());
+
+        Ui.showRtl(builder.create());
     }
 
     private void showNoShiftDialog() {
-        AlertDialog d = new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("لا توجد وردية مفتوحة")
                 .setMessage("لا يمكن حفظ الطلبات وطباعتها بدون وردية. ابدأ وردية الآن؟")
-                .setPositiveButton("بدء وردية", (x, w) -> open(ShiftActivity.class))
+                .setPositiveButton(
+                        "بدء وردية", (d, w) -> open(ShiftActivity.class))
                 .setNegativeButton(R.string.cancel, null)
                 .create();
-        Ui.showRtl(d);
+
+        Ui.showRtl(dialog);
     }
 
     private void showNoPrinterDialog() {
-        AlertDialog d = new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("لم تُحدد طابعة")
                 .setMessage("اختر طابعة (بلوتوث أو شبكة) من إعدادات الطابعة قبل الطباعة. الطلب باقٍ كما هو ولم يُحفظ بعد.")
-                .setPositiveButton("إعدادات الطابعة", (x, w) -> open(PrinterSettingsActivity.class))
+                .setPositiveButton(
+                        "إعدادات الطابعة",
+                        (d, w) -> open(PrinterSettingsActivity.class))
                 .setNegativeButton(R.string.cancel, null)
                 .create();
-        Ui.showRtl(d);
+
+        Ui.showRtl(dialog);
     }
 
-    // ======================= المعالج الأول =======================
-
     private void maybeShowFirstRun() {
-        if (firstRunShown || settings.getBool(AppSettings.SETUP_DONE, false)) return;
+        if (firstRunShown
+                || settings.getBool(AppSettings.SETUP_DONE, false)) {
+            return;
+        }
+
         firstRunShown = true;
-        AlertDialog d = new AlertDialog.Builder(this)
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("مرحباً بك في دليفري الحجي")
                 .setMessage("قبل أول استخدام:\n\n"
                         + "1) تهيئة الطابعة: سيطلب التطبيق إذن «الأجهزة القريبة» للبحث عن طابعة البلوتوث "
@@ -709,35 +861,42 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                         + "طابعة شبكية بعنوان IP.\n\n"
                         + "2) ابدأ وردية من شاشة «الوردية» قبل أول طلب.")
                 .setCancelable(false)
-                .setPositiveButton("تهيئة الطابعة الآن", (x, w) -> {
+                .setPositiveButton("تهيئة الطابعة الآن", (d, w) -> {
                     settings.setBool(AppSettings.SETUP_DONE, true);
-                    Intent i = new Intent(this, PrinterSettingsActivity.class);
-                    i.putExtra("first_run", true);
-                    startActivity(i);
+                    Intent intent = new Intent(
+                            this, PrinterSettingsActivity.class);
+                    intent.putExtra("first_run", true);
+                    startActivity(intent);
                 })
-                .setNegativeButton("لاحقاً", (x, w) -> settings.setBool(AppSettings.SETUP_DONE, true))
+                .setNegativeButton(
+                        "لاحقاً",
+                        (d, w) -> settings.setBool(
+                                AppSettings.SETUP_DONE, true))
                 .create();
-        Ui.showRtl(d);
-    }
 
-    // ======================= تحديث الواجهة =======================
+        Ui.showRtl(dialog);
+    }
 
     private void refreshOrderUi() {
         current.recalc();
-        boolean locked = locked();
+        boolean isLocked = locked();
         boolean delivery = OrderType.DELIVERY.equals(current.type);
 
-        tvOrderNo.setText("طلب رقم " + (locked ? current.id : orders.nextOrderNumber()));
+        tvOrderNo.setText("طلب رقم "
+                + (isLocked ? current.id : orders.nextOrderNumber()));
         tvOrderTime.setText(Fmt.dateTime(current.createdAt));
 
         for (int i = 0; i < typeViews.length; i++) {
-            boolean sel = TYPE_CODES[i].equals(current.type);
-            typeViews[i].setVisibility(typeEnabled(TYPE_CODES[i]) ? View.VISIBLE : View.GONE);
-            typeViews[i].setSelected(sel);
-            typeViews[i].setTextColor(ContextCompat.getColor(this, sel ? R.color.white : R.color.text_primary));
+            boolean selected = TYPE_CODES[i].equals(current.type);
+            typeViews[i].setVisibility(
+                    typeEnabled(TYPE_CODES[i]) ? View.VISIBLE : View.GONE);
+            typeViews[i].setSelected(selected);
+            typeViews[i].setTextColor(ContextCompat.getColor(
+                    this,
+                    selected ? R.color.white : R.color.text_primary));
         }
 
-        if (locked) {
+        if (isLocked) {
             tvLockedBanner.setText("الطلب رقم " + current.id
                     + " محفوظ بانتظار الطباعة. اضغط «إعادة المحاولة» أو ألغِ الطلب.");
             tvLockedBanner.setVisibility(View.VISIBLE);
@@ -745,86 +904,120 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             tvLockedBanner.setVisibility(View.GONE);
         }
 
-        // ملخص بيانات الزبون
         List<String> parts = new ArrayList<>();
-        if (!isBlank(current.customerName)) parts.add(current.customerName.trim());
-        if (!isBlank(current.phone)) parts.add(current.phone.trim());
-        if (delivery && !isBlank(current.address)) parts.add(current.address.trim());
-        if (delivery && !isBlank(current.driver)) parts.add("السائق: " + current.driver.trim());
+
+        if (!isBlank(current.customerName)) {
+            parts.add(current.customerName.trim());
+        }
+        if (!isBlank(current.phone)) {
+            parts.add(current.phone.trim());
+        }
+        if (delivery && !isBlank(current.address)) {
+            parts.add(current.address.trim());
+        }
+        if (delivery && !isBlank(current.driver)) {
+            parts.add("السائق: " + current.driver.trim());
+        }
+
         if (parts.isEmpty()) {
-            tvDetailsSummary.setText(delivery ? "أدخل عنوان التوصيل (مطلوب)" : "لا توجد بيانات زبون");
-            tvDetailsSummary.setTextColor(ContextCompat.getColor(this,
+            tvDetailsSummary.setText(
+                    delivery ? "أدخل عنوان التوصيل (مطلوب)" : "لا توجد بيانات زبون");
+            tvDetailsSummary.setTextColor(ContextCompat.getColor(
+                    this,
                     delivery ? R.color.error : R.color.text_hint));
         } else {
             tvDetailsSummary.setText(join(parts, "  •  "));
-            tvDetailsSummary.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            tvDetailsSummary.setTextColor(ContextCompat.getColor(
+                    this, R.color.text_secondary));
         }
 
-        lineAdapter.setLines(current.lines, locked);
-        tvEmptyOrder.setVisibility(current.lines.isEmpty() ? View.VISIBLE : View.GONE);
+        lineAdapter.setLines(current.lines, isLocked);
+        tvEmptyOrder.setVisibility(
+                current.lines.isEmpty() ? View.VISIBLE : View.GONE);
 
         tvSubtotal.setText(Fmt.money(current.subtotal));
-        rowDiscount.setVisibility(current.discount > 0 ? View.VISIBLE : View.GONE);
+        rowDiscount.setVisibility(
+                current.discount > 0 ? View.VISIBLE : View.GONE);
         tvDiscount.setText("- " + Fmt.money(current.discount));
-        rowDelivery.setVisibility(delivery && current.deliveryFee > 0 ? View.VISIBLE : View.GONE);
+
+        rowDelivery.setVisibility(
+                delivery && current.deliveryFee > 0
+                        ? View.VISIBLE : View.GONE);
         tvDelivery.setText(Fmt.money(current.deliveryFee));
         tvTotal.setText(Fmt.money(current.total));
 
-        boolean canPrint = !printing && (locked || !current.lines.isEmpty());
+        boolean canPrint = !printing
+                && (isLocked || !current.lines.isEmpty());
+
         btnPrint.setEnabled(canPrint);
         btnPrint.setAlpha(canPrint ? 1f : 0.5f);
-        btnPrint.setText(printing ? "جارٍ الطباعة..." : (locked ? "إعادة المحاولة" : "طباعة الفاتورة"));
+        btnPrint.setText(
+                printing ? "جارٍ الطباعة..."
+                        : (isLocked ? "إعادة المحاولة" : "طباعة الفاتورة"));
+
         btnCancelOrder.setAlpha(printing ? 0.5f : 1f);
         btnNewOrder.setAlpha(printing ? 0.5f : 1f);
     }
 
-    private static String join(List<String> parts, String sep) {
-        StringBuilder sb = new StringBuilder();
+    private static String join(List<String> parts, String separator) {
+        StringBuilder result = new StringBuilder();
+
         for (int i = 0; i < parts.size(); i++) {
-            if (i > 0) sb.append(sep);
-            sb.append(parts.get(i));
+            if (i > 0) result.append(separator);
+            result.append(parts.get(i));
         }
-        return sb.toString();
+
+        return result.toString();
     }
 
     private void refreshChips() {
-        Shift s = shifts.getOpenShift();
-        if (s == null) {
+        Shift shift = shifts.getOpenShift();
+
+        if (shift == null) {
             chipShift.setText("لا توجد وردية — ابدأ وردية");
-            chipShift.setTextColor(ContextCompat.getColor(this, R.color.error));
+            chipShift.setTextColor(ContextCompat.getColor(
+                    this, R.color.error));
         } else {
-            chipShift.setText("الوردية #" + s.id + " مفتوحة");
-            chipShift.setTextColor(ContextCompat.getColor(this, R.color.success));
+            chipShift.setText("الوردية #" + shift.id + " مفتوحة");
+            chipShift.setTextColor(ContextCompat.getColor(
+                    this, R.color.success));
         }
+
         refreshPrinterChip();
     }
 
     private void refreshPrinterChip() {
-        PrinterManager pm = PrinterManager.get(this);
+        PrinterManager manager = PrinterManager.get(this);
         String text;
         int color;
-        if (!pm.hasSelectedPrinter()) {
+
+        if (!manager.hasSelectedPrinter()) {
             text = "الطابعة: غير محددة";
             color = R.color.warning;
         } else {
-            switch (pm.getState()) {
+            switch (manager.getState()) {
                 case CONNECTED:
                     text = "الطابعة: متصلة";
                     color = R.color.success;
                     break;
+
                 case CONNECTING:
                     text = "الطابعة: جارٍ الاتصال...";
                     color = R.color.warning;
                     break;
+
                 case ERROR:
                     text = "الطابعة: خطأ اتصال";
                     color = R.color.error;
                     break;
+
                 default:
                     text = "الطابعة: تتصل عند الطباعة";
                     color = R.color.text_secondary;
+                    break;
             }
         }
+
         chipPrinter.setText(text);
         chipPrinter.setTextColor(ContextCompat.getColor(this, color));
     }
