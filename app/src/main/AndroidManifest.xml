@@ -1,20 +1,24 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- بلوتوث (Android 12+): البحث والاتصال. neverForLocation يعني أننا لا نستنتج موقعاً، فلا حاجة لإذن الموقع. -->
+    <!-- بلوتوث -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- الإنترنت مطلوب تقنياً فقط لفتح مقبس TCP نحو الطابعة الشبكية داخل الشبكة المحلية.
-         التطبيق لا يتصل بأي خادم خارجي ويعمل الكاشير كاملاً بدونه. -->
+    <!-- الطابعة الشبكية -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="true" />
 
     <application
         android:allowBackup="false"
@@ -40,46 +44,74 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".OrdersActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".OrderDetailsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".PrinterSettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".ProductsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".ReportsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".ShiftActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- لمشاركة ملفات CSV والنسخ الاحتياطي -->
+        <!-- خدمة المكالمات -->
+        <service
+            android:name=".HajiInCallService"
+            android:permission="android.permission.BIND_INCALL_SERVICE"
+            android:exported="true">
+
+            <meta-data
+                android:name="android.telecom.IN_CALL_SERVICE_UI"
+                android:value="true" />
+
+            <meta-data
+                android:name="android.telecom.IN_CALL_SERVICE_RINGING"
+                android:value="true" />
+
+            <intent-filter>
+                <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <!-- مشاركة ملفات CSV والنسخ الاحتياطي -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
+
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 </manifest>
