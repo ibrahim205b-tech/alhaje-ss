@@ -1,12 +1,13 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- أزرار من TextView حتى لا يطغى عليها تلوين MaterialButton -->
+    <!-- الأزرار الرئيسية -->
     <style name="Haji.Button" parent="">
         <item name="android:gravity">center</item>
-        <item name="android:minHeight">52dp</item>
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:textSize">17sp</item>
+        <item name="android:minHeight">42dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:clickable">true</item>
@@ -19,13 +20,14 @@
         <item name="android:background">@drawable/bg_button_secondary</item>
     </style>
 
+    <!-- أزرار التنقل العلوية -->
     <style name="Haji.Nav" parent="">
         <item name="android:gravity">center</item>
-        <item name="android:minHeight">44dp</item>
-        <item name="android:paddingStart">14dp</item>
-        <item name="android:paddingEnd">14dp</item>
-        <item name="android:layout_marginStart">8dp</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:clickable">true</item>
@@ -33,12 +35,13 @@
         <item name="android:background">@drawable/bg_nav_button</item>
     </style>
 
+    <!-- مؤشرات الوردية والطابعة -->
     <style name="Haji.Chip" parent="">
         <item name="android:gravity">center</item>
-        <item name="android:minHeight">44dp</item>
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:clickable">true</item>
@@ -46,21 +49,23 @@
         <item name="android:background">@drawable/bg_chip</item>
     </style>
 
+    <!-- حقول الإدخال -->
     <style name="Haji.Input" parent="">
         <item name="android:background">@drawable/bg_input</item>
-        <item name="android:padding">14dp</item>
-        <item name="android:minHeight">52dp</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:minHeight">42dp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textColorHint">@color/text_hint</item>
         <item name="android:textAlignment">viewStart</item>
         <item name="android:gravity">start|center_vertical</item>
     </style>
 
+    <!-- عناوين الحقول -->
     <style name="Haji.Label" parent="">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:layout_marginTop">12dp</item>
-        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_marginTop">7dp</item>
+        <item name="android:layout_marginBottom">3dp</item>
     </style>
 </resources>
