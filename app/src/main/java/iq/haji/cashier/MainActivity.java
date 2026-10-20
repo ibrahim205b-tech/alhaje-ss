@@ -1,4 +1,3 @@
-
 package iq.haji.cashier;
 
 import android.content.Intent;
@@ -45,9 +44,6 @@ import iq.haji.cashier.util.Fmt;
 import iq.haji.cashier.util.PinDialog;
 import iq.haji.cashier.util.Ui;
 
-/**
- * شاشة الكاشير. الطلب الجاري يُحفظ كمسودة تلقائياً.
- */
 public class MainActivity extends BaseActivity implements PrinterManager.StateListener {
 
     private static final String[] TYPE_CODES = {
@@ -123,9 +119,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         maybeShowFirstRun();
     }
 
-    /**
-     * يقرأ رقم المتصل الذي حفظته خدمة المكالمات ويضعه في الطلب الجاري.
-     */
     private void applyPendingCallerNumber() {
         String phone = CallNumberStore.consume(this);
 
@@ -142,6 +135,23 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         persist();
 
         Ui.toast(this, "تم إدراج رقم الزبون تلقائياً");
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (intent != null
+                && "iq.haji.cashier.NEW_CALL_NUMBER".equals(intent.getAction())) {
+            String phone = intent.getStringExtra("caller_number");
+
+            if (phone != null && !phone.trim().isEmpty()) {
+                CallNumberStore.save(this, phone);
+                applyPendingCallerNumber();
+                refreshOrderUi();
+            }
+        }
     }
 
     @Override
@@ -277,24 +287,31 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void loadInitialOrder() {
         List<Order> pending = orders.listPendingPrint();
+
         if (!pending.isEmpty()) {
             Order order = orders.getOrder(pending.get(0).id);
+
             if (order != null) {
                 current = order;
+
                 if (pending.size() > 1) {
                     Ui.toast(this, "يوجد " + pending.size()
                             + " طلبات بانتظار الطباعة. الأحدث معروض هنا والبقية في شاشة الطلبات.");
                 }
+
                 return;
             }
         }
 
         Order draft = orders.loadDraft();
+
         if (draft != null) {
             current = draft;
+
             if (current.createdAt == 0) {
                 current.createdAt = System.currentTimeMillis();
             }
+
             normalizeType();
         } else {
             newOrder();
@@ -323,6 +340,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (printing || current == null || current.id == 0) return;
 
         Order fresh = orders.getOrder(current.id);
+
         if (fresh == null || !OrderStatus.PENDING_PRINT.equals(fresh.status)) {
             newOrder();
         } else {
@@ -334,9 +352,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (OrderType.DELIVERY.equals(type)) {
             return settings.getBool(AppSettings.ENABLE_DELIVERY, true);
         }
+
         if (OrderType.DINE_IN.equals(type)) {
             return settings.getBool(AppSettings.ENABLE_DINE_IN, true);
         }
+
         return settings.getBool(AppSettings.ENABLE_TAKEAWAY, true);
     }
 
@@ -353,9 +373,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void persist() {
         current.recalc();
+
         if (!locked()) {
             orders.saveDraft(current);
         }
+
         refreshOrderUi();
     }
 
@@ -373,10 +395,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         current.type = type;
+
         if (OrderType.DELIVERY.equals(type) && current.deliveryFee == 0) {
             current.deliveryFee =
                     settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
         }
+
         persist();
     }
 
@@ -403,10 +427,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             if (selectedCategory > 0 && product.categoryId != selectedCategory) {
                 continue;
             }
+
             if (!normalizedQuery.isEmpty()
                     && !ArabicText.normalize(product.name).contains(normalizedQuery)) {
                 continue;
             }
+
             filtered.add(product);
         }
 
@@ -493,9 +519,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 .setView(Ui.wrap(this, edit))
                 .setPositiveButton(R.string.save, (d, w) -> {
                     String note = edit.getText().toString().trim();
+
                     if (note.length() > 80) {
                         note = note.substring(0, 80);
                     }
+
                     line.note = note;
                     persist();
                 })
@@ -542,9 +570,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (current.deliveryFee > 0) {
             etFee.setText(String.valueOf(current.deliveryFee));
         }
+
         if (current.discount > 0) {
             etDiscount.setText(String.valueOf(current.discount));
         }
+
         etNotes.setText(nz(current.notes));
 
         final AlertDialog dialog = new AlertDialog.Builder(this)
@@ -562,8 +592,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                             if (delivery) {
                                 String value = etFee.getText().toString().trim();
+
                                 if (!value.isEmpty()) {
                                     fee = Fmt.parseMoney(value);
+
                                     if (fee < 0) {
                                         etFee.setError("مبلغ غير صحيح");
                                         return;
@@ -577,10 +609,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                                 if (!value.isEmpty()) {
                                     discount = Fmt.parseMoney(value);
+
                                     if (discount < 0) {
                                         etDiscount.setError("مبلغ غير صحيح");
                                         return;
                                     }
+
                                     if (discount > current.subtotal) {
                                         etDiscount.setError(
                                                 "الخصم أكبر من مجموع الطلب");
@@ -745,6 +779,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void onPrintResult(ReceiptPrinter.Result result) {
         printing = false;
+
         if (isFinishing() || isDestroyed()) return;
 
         if (result.success) {
@@ -774,6 +809,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (orderId == 0) return;
 
         Order order = orders.getOrder(orderId);
+
         if (order != null
                 && OrderStatus.PENDING_PRINT.equals(order.status)) {
             try {
@@ -888,8 +924,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         for (int i = 0; i < typeViews.length; i++) {
             boolean selected = TYPE_CODES[i].equals(current.type);
+
             typeViews[i].setVisibility(
                     typeEnabled(TYPE_CODES[i]) ? View.VISIBLE : View.GONE);
+
             typeViews[i].setSelected(selected);
             typeViews[i].setTextColor(ContextCompat.getColor(
                     this,
@@ -909,12 +947,15 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (!isBlank(current.customerName)) {
             parts.add(current.customerName.trim());
         }
+
         if (!isBlank(current.phone)) {
             parts.add(current.phone.trim());
         }
+
         if (delivery && !isBlank(current.address)) {
             parts.add(current.address.trim());
         }
+
         if (delivery && !isBlank(current.driver)) {
             parts.add("السائق: " + current.driver.trim());
         }
@@ -922,6 +963,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         if (parts.isEmpty()) {
             tvDetailsSummary.setText(
                     delivery ? "أدخل عنوان التوصيل (مطلوب)" : "لا توجد بيانات زبون");
+
             tvDetailsSummary.setTextColor(ContextCompat.getColor(
                     this,
                     delivery ? R.color.error : R.color.text_hint));
@@ -932,17 +974,20 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         lineAdapter.setLines(current.lines, isLocked);
+
         tvEmptyOrder.setVisibility(
                 current.lines.isEmpty() ? View.VISIBLE : View.GONE);
 
         tvSubtotal.setText(Fmt.money(current.subtotal));
+
         rowDiscount.setVisibility(
                 current.discount > 0 ? View.VISIBLE : View.GONE);
+
         tvDiscount.setText("- " + Fmt.money(current.discount));
 
         rowDelivery.setVisibility(
-                delivery && current.deliveryFee > 0
-                        ? View.VISIBLE : View.GONE);
+                delivery && current.deliveryFee > 0 ? View.VISIBLE : View.GONE);
+
         tvDelivery.setText(Fmt.money(current.deliveryFee));
         tvTotal.setText(Fmt.money(current.total));
 
@@ -951,6 +996,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         btnPrint.setEnabled(canPrint);
         btnPrint.setAlpha(canPrint ? 1f : 0.5f);
+
         btnPrint.setText(
                 printing ? "جارٍ الطباعة..."
                         : (isLocked ? "إعادة المحاولة" : "طباعة الفاتورة"));
