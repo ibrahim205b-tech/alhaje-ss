@@ -8,9 +8,7 @@
         tools:targetApi="s" />
 
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <uses-feature
@@ -84,6 +82,19 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
+
+        <service
+            android:name=".CallNotificationListener"
+            android:label="مطعم الحجي - رقم المتصل"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+
+            <intent-filter>
+                <action
+                    android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+
+        </service>
 
         <service
             android:name=".HajiInCallService"
