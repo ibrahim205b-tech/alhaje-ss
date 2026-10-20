@@ -122,6 +122,18 @@ public class ReportsActivity extends PageActivity {
         TextView ex2 = UiKit.button(this, "تصدير سجل الورديات CSV", false);
         ex2.setOnClickListener(v -> exportShifts());
         tools.addView(ex2, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
+        TextView printDaily = UiKit.button(this, "طباعة مبيعات اليوم", true);
+printDaily.setOnClickListener(v -> {
+    printDaily.setEnabled(false);
+
+    new DailySalesReportPrinter(this).printToday((success, message) -> {
+        printDaily.setEnabled(true);
+        Ui.toast(this, message);
+    });
+});
+
+tools.addView(printDaily,
+        UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
         left.addView(tools, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
 
         // اليسار: القوائم
