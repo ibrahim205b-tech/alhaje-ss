@@ -2,21 +2,41 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
+    android:layout_margin="5dp"
     android:background="@drawable/bg_card"
     android:clickable="true"
     android:clipToOutline="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="4dp">
 
-    <ImageView
-        android:id="@+id/imgProduct"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:background="@drawable/bg_product_image"
-        android:contentDescription="@null"
-        android:scaleType="centerInside" />
+        android:layout_height="94dp">
+
+        <ImageView
+            android:id="@+id/imgProduct"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_product_image"
+            android:contentDescription="@null"
+            android:padding="8dp"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="6dp"
+            android:background="@drawable/bg_circle_red"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
 
     <TextView
         android:id="@+id/tvName"
@@ -25,21 +45,29 @@
         android:ellipsize="end"
         android:maxLines="2"
         android:minLines="2"
-        android:paddingStart="10dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="10dp"
+        android:paddingStart="9dp"
+        android:paddingTop="9dp"
+        android:paddingEnd="9dp"
         android:textColor="@color/text_primary"
-        android:textSize="16sp"
+        android:textSize="15sp"
         android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="9dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="9dp"
+        android:background="@color/stroke" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="10dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="10dp"
+        android:paddingStart="9dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="9dp"
         android:paddingBottom="10dp">
 
         <TextView
@@ -52,13 +80,15 @@
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:background="@drawable/bg_circle_red"
             android:gravity="center"
             android:text="+"
             android:textColor="@color/white"
-            android:textSize="24sp"
+            android:textSize="21sp"
             android:textStyle="bold" />
+
     </LinearLayout>
+
 </LinearLayout>
