@@ -1,4 +1,5 @@
 package iq.haji.cashier;
+
 import android.app.role.RoleManager;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -115,9 +117,29 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         setupActions();
         loadInitialOrder();
 
+        animateEntrance();
+
         lastProcessedCallTime = getSharedPreferences(
                 "haji_call_data", MODE_PRIVATE)
                 .getLong("latest_call_time", 0L);
+    }
+
+    private void animateEntrance() {
+        View root = findViewById(R.id.root);
+
+        if (root == null) {
+            return;
+        }
+
+        root.setAlpha(0f);
+        root.setTranslationY(10f);
+
+        root.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(320L)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
     }
 
     @Override
@@ -168,6 +190,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 "haji_call_data", MODE_PRIVATE);
 
         long callTime = prefs.getLong("latest_call_time", 0L);
+
         if (callTime <= 0L || callTime <= lastProcessedCallTime) {
             return;
         }
@@ -219,6 +242,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         if (intent != null
                 && "iq.haji.cashier.NEW_CALL_NUMBER".equals(intent.getAction())) {
+
             String phone = intent.getStringExtra("caller_number");
 
             if (phone != null && !phone.trim().isEmpty()) {
@@ -253,6 +277,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         rowDiscount = findViewById(R.id.rowDiscount);
         rowDelivery = findViewById(R.id.rowDelivery);
         rvLines = findViewById(R.id.rvLines);
+
         typeViews[0] = findViewById(R.id.tvTypeTakeaway);
         typeViews[1] = findViewById(R.id.tvTypeDelivery);
         typeViews[2] = findViewById(R.id.tvTypeDineIn);
