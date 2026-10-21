@@ -1,3 +1,4 @@
+
 package iq.haji.cashier;
 
 import android.content.Intent;
@@ -185,24 +186,33 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void setupLists() {
         int widthDp = getResources().getConfiguration().screenWidthDp;
-        int span = Math.max(2, (int) (widthDp * 0.6f - 24) / 170);
+        int span = Math.max(2, (int) ((widthDp * 0.5f - 125) / 145));
 
         RecyclerView rvProducts = findViewById(R.id.rvProducts);
         rvProducts.setLayoutManager(new GridLayoutManager(this, span));
+
         productAdapter = new ProductAdapter(this::addProduct);
         rvProducts.setAdapter(productAdapter);
 
         RecyclerView rvCategories = findViewById(R.id.rvCategories);
         rvCategories.setLayoutManager(
-                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+                new LinearLayoutManager(
+                        this,
+                        LinearLayoutManager.VERTICAL,
+                        false
+                )
+        );
+
         categoryAdapter = new CategoryAdapter(id -> {
             selectedCategory = id;
             categoryAdapter.setSelected(id);
             applyFilter();
         });
+
         rvCategories.setAdapter(categoryAdapter);
 
         rvLines.setLayoutManager(new LinearLayoutManager(this));
+
         lineAdapter = new OrderLineAdapter(new OrderLineAdapter.Listener() {
             @Override
             public void onPlus(OrderLine line) {
@@ -224,16 +234,54 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 editNote(line);
             }
         });
+
         rvLines.setAdapter(lineAdapter);
     }
 
     private void setupActions() {
-        findViewById(R.id.navOrders).setOnClickListener(v -> open(OrdersActivity.class));
-        findViewById(R.id.navProducts).setOnClickListener(v -> open(ProductsActivity.class));
-        findViewById(R.id.navReports).setOnClickListener(v -> open(ReportsActivity.class));
-        findViewById(R.id.navShift).setOnClickListener(v -> open(ShiftActivity.class));
-        findViewById(R.id.navPrinter).setOnClickListener(v -> open(PrinterSettingsActivity.class));
-        findViewById(R.id.navSettings).setOnClickListener(v -> open(SettingsActivity.class));
+        findViewById(R.id.btnAdministration).setOnClickListener(v -> {
+            String[] options = {
+                    "🧾 الطلبات",
+                    "🍕 الأصناف والأقسام",
+                    "📊 التقارير",
+                    "⏱ الورديات",
+                    "🖨 إعدادات الطابعة",
+                    "⚙ الإعدادات"
+            };
+
+            new AlertDialog.Builder(this)
+                    .setTitle("إدارة مطعم الحجي")
+                    .setItems(options, (dialog, which) -> {
+                        switch (which) {
+                            case 0:
+                                open(OrdersActivity.class);
+                                break;
+
+                            case 1:
+                                open(ProductsActivity.class);
+                                break;
+
+                            case 2:
+                                open(ReportsActivity.class);
+                                break;
+
+                            case 3:
+                                open(ShiftActivity.class);
+                                break;
+
+                            case 4:
+                                open(PrinterSettingsActivity.class);
+                                break;
+
+                            case 5:
+                                open(SettingsActivity.class);
+                                break;
+                        }
+                    })
+                    .setNegativeButton("إغلاق", null)
+                    .show();
+        });
+
         chipShift.setOnClickListener(v -> open(ShiftActivity.class));
         chipPrinter.setOnClickListener(v -> open(PrinterSettingsActivity.class));
 
@@ -243,12 +291,25 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         EditText etSearch = findViewById(R.id.etSearch);
+
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(
+                    CharSequence s,
+                    int start,
+                    int count,
+                    int after
+            ) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(
+                    CharSequence s,
+                    int start,
+                    int before,
+                    int count
+            ) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -260,18 +321,24 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH
                     || actionId == EditorInfo.IME_ACTION_DONE) {
+
                 InputMethodManager imm =
                         (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+
                 if (imm != null) {
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
+
                 v.clearFocus();
                 return true;
             }
+
             return false;
         });
 
-        findViewById(R.id.btnDetails).setOnClickListener(v -> showDetailsDialog());
+        findViewById(R.id.btnDetails)
+                .setOnClickListener(v -> showDetailsDialog());
+
         btnCancelOrder.setOnClickListener(v -> onCancelOrder());
         btnNewOrder.setOnClickListener(v -> onNewOrder());
         btnPrint.setOnClickListener(v -> onPrint());
@@ -337,7 +404,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void syncCurrentWithDb() {
-        if (printing || current == null || current.id == 0) return;
+        if (printing || current == null || current.id == 0) {
+            return;
+        }
 
         Order fresh = orders.getOrder(current.id);
 
@@ -361,7 +430,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void normalizeType() {
-        if (typeEnabled(current.type)) return;
+        if (typeEnabled(current.type)) {
+            return;
+        }
 
         for (String type : TYPE_CODES) {
             if (typeEnabled(type)) {
@@ -387,7 +458,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void setType(String type) {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -409,10 +482,14 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         boolean found = selectedCategory == 0;
 
         for (Category category : categories) {
-            if (category.id == selectedCategory) found = true;
+            if (category.id == selectedCategory) {
+                found = true;
+            }
         }
 
-        if (!found) selectedCategory = 0;
+        if (!found) {
+            selectedCategory = 0;
+        }
 
         categoryAdapter.setCategories(categories, selectedCategory);
         allProducts = catalog.getProducts(0, null, true);
@@ -449,7 +526,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void addProduct(Product product) {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -459,7 +538,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         for (OrderLine line : current.lines) {
             if (line.productId == product.id
                     && (line.note == null || line.note.trim().isEmpty())) {
-                if (line.qty < 999) line.qty++;
+                if (line.qty < 999) {
+                    line.qty++;
+                }
+
                 persist();
                 return;
             }
@@ -477,7 +559,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void changeQty(OrderLine line, int delta) {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -489,7 +573,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void removeLine(OrderLine line) {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -501,7 +587,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void editNote(final OrderLine line) {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -534,7 +622,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void showDetailsDialog() {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             Ui.toast(this, "الطلب محفوظ ولا يمكن تعديل بياناته");
@@ -658,7 +748,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void onNewOrder() {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (locked()) {
             toastLocked();
@@ -678,7 +770,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void onCancelOrder() {
-        if (printing) return;
+        if (printing) {
+            return;
+        }
 
         if (!locked()) {
             if (current.lines.isEmpty()) {
@@ -742,7 +836,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void onPrint() {
-        if (printing || ReceiptPrinter.isBusy()) return;
+        if (printing || ReceiptPrinter.isBusy()) {
+            return;
+        }
 
         if (!locked()) {
             if (current.lines.isEmpty()) {
@@ -780,7 +876,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private void onPrintResult(ReceiptPrinter.Result result) {
         printing = false;
 
-        if (isFinishing() || isDestroyed()) return;
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
 
         if (result.success) {
             ensurePrintedState(result.orderId);
@@ -806,7 +904,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void ensurePrintedState(long orderId) {
-        if (orderId == 0) return;
+        if (orderId == 0) {
+            return;
+        }
 
         Order order = orders.getOrder(orderId);
 
@@ -1009,7 +1109,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < parts.size(); i++) {
-            if (i > 0) result.append(separator);
+            if (i > 0) {
+                result.append(separator);
+            }
+
             result.append(parts.get(i));
         }
 
