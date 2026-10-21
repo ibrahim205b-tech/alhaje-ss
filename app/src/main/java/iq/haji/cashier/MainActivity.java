@@ -1,7 +1,11 @@
+
 package iq.haji.cashier;
 
+import android.app.role.RoleManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -64,6 +68,25 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private List<Product> allProducts = new ArrayList<>();
     private boolean firstRunShown = false;
     private boolean printing = false;
+    private boolean callerPollingStarted = false;
+    private long lastProcessedCallTime = 0L;
+    private EditText activeCallerPhoneView;
+
+    private final Handler callerHandler = new Handler(Looper.getMainLooper());
+
+    private final Runnable callerPollingTask = new Runnable() {
+        @Override
+        public void run() {
+            if (!callerPollingStarted || isFinishing() || isDestroyed()) {
+                return;
+            }
+
+            processLatestCallerNumber();
+            callerHandler.postDelayed(this, 1000L);
+        }
+    };
+
+    private static final int REQUEST_CALL_SCREENING_ROLE = 7401;
 
     private TextView chipShift, chipPrinter, tvOrderNo, tvOrderTime,
             tvLockedBanner, tvDetailsSummary;
@@ -93,6 +116,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         setupLists();
         setupActions();
         loadInitialOrder();
+
+        lastProcessedCallTime = getSharedPreferences(
+                "haji_call_data", MODE_PRIVATE)
+                .getLong("latest_call_time", 0L);
     }
 
     @Override
@@ -117,11 +144,47 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         refreshOrderUi();
         refreshChips();
         maybeShowFirstRun();
+        startCallerPolling();
     }
 
-    private void applyPendingCallerNumber() {
-        String phone = CallNumberStore.consume(this);
+    @Override
+    protected void onPause() {
+        stopCallerPolling();
+        super.onPause();
+    }
 
+    private void startCallerPolling() {
+        callerPollingStarted = true;
+        callerHandler.removeCallbacks(callerPollingTask);
+        processLatestCallerNumber();
+        callerHandler.postDelayed(callerPollingTask, 1000L);
+    }
+
+    private void stopCallerPolling() {
+        callerPollingStarted = false;
+        callerHandler.removeCallbacks(callerPollingTask);
+    }
+
+    private void processLatestCallerNumber() {
+        android.content.SharedPreferences prefs = getSharedPreferences(
+                "haji_call_data", MODE_PRIVATE);
+
+        long callTime = prefs.getLong("latest_call_time", 0L);
+        if (callTime <= 0L || callTime <= lastProcessedCallTime) {
+            return;
+        }
+
+        String phone = prefs.getString("latest_number", "");
+        lastProcessedCallTime = callTime;
+
+        if (phone == null || phone.trim().isEmpty()) {
+            return;
+        }
+
+        applyCallerNumberToDraft(phone);
+    }
+
+    private void applyCallerNumberToDraft(String phone) {
         if (phone == null || phone.trim().isEmpty()) {
             return;
         }
@@ -132,8 +195,22 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         current.phone = Fmt.normalizeDigits(phone);
-        persist();
 
+        if (activeCallerPhoneView != null) {
+            activeCallerPhoneView.setText(nz(current.phone));
+        }
+
+        persist();
+    }
+
+    private void applyPendingCallerNumber() {
+        String phone = CallNumberStore.consume(this);
+
+        if (phone == null || phone.trim().isEmpty()) {
+            return;
+        }
+
+        applyCallerNumberToDraft(phone);
         Ui.toast(this, "تم إدراج رقم الزبون تلقائياً");
     }
 
@@ -245,7 +322,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                     "📊 التقارير",
                     "⏱ الورديات",
                     "🖨 إعدادات الطابعة",
-                    "⚙ الإعدادات"
+                    "⚙ الإعدادات",
+                    "📞 تفعيل رقم المتصل"
             };
 
             new AlertDialog.Builder(this)
@@ -274,6 +352,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                             case 5:
                                 open(SettingsActivity.class);
+                                break;
+
+                            case 6:
+                                requestCallerScreeningRole();
                                 break;
                         }
                     })
@@ -347,6 +429,45 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         startActivity(new Intent(this, cls));
     }
 
+    private void requestCallerScreeningRole() {
+        RoleManager roleManager = getSystemService(RoleManager.class);
+
+        if (roleManager == null
+                || !roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+            Ui.toast(this, "هذا الجهاز لا يدعم تفعيل خدمة فحص المكالمات");
+            return;
+        }
+
+        if (roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+            Ui.toast(this, "خدمة التقاط رقم المتصل مفعّلة بالفعل");
+            return;
+        }
+
+        try {
+            Intent intent = roleManager.createRequestRoleIntent(
+                    RoleManager.ROLE_CALL_SCREENING);
+            startActivityForResult(intent, REQUEST_CALL_SCREENING_ROLE);
+        } catch (RuntimeException e) {
+            Ui.toast(this, "تعذر فتح شاشة تفعيل خدمة رقم المتصل");
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CALL_SCREENING_ROLE) {
+            RoleManager roleManager = getSystemService(RoleManager.class);
+
+            if (roleManager != null
+                    && roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+                Ui.toast(this, "تم تفعيل خدمة التقاط رقم المتصل");
+            } else {
+                Ui.toast(this, "لم يتم تفعيل خدمة التقاط رقم المتصل");
+            }
+        }
+    }
+
     private boolean locked() {
         return current != null && current.id != 0;
     }
@@ -398,8 +519,24 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void resetOrder() {
         orders.clearDraft();
+        clearStoredCallerNumber();
         newOrder();
         refreshOrderUi();
+    }
+
+    private void clearStoredCallerNumber() {
+        getSharedPreferences("haji_call_data", MODE_PRIVATE)
+                .edit()
+                .remove("latest_number")
+                .remove("latest_call_time")
+                .remove("pending_phone")
+                .apply();
+
+        lastProcessedCallTime = 0L;
+
+        if (activeCallerPhoneView != null) {
+            activeCallerPhoneView.setText("");
+        }
     }
 
     private void syncCurrentWithDb() {
@@ -640,6 +777,18 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         final EditText etName = view.findViewById(R.id.etCustomerName);
         final EditText etPhone = view.findViewById(R.id.etPhone);
+
+        etPhone.setKeyListener(null);
+        etPhone.setFocusable(false);
+        etPhone.setFocusableInTouchMode(false);
+        etPhone.setClickable(false);
+        etPhone.setLongClickable(false);
+        etPhone.setCursorVisible(false);
+        etPhone.setTextIsSelectable(false);
+        etPhone.setInputType(InputType.TYPE_NULL);
+
+        activeCallerPhoneView = etPhone;
+
         final EditText etAddress = view.findViewById(R.id.etAddress);
         final EditText etDriver = view.findViewById(R.id.etDriver);
         final EditText etFee = view.findViewById(R.id.etDeliveryFee);
@@ -648,6 +797,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         view.findViewById(R.id.groupDelivery)
                 .setVisibility(delivery ? View.VISIBLE : View.GONE);
+
         view.findViewById(R.id.groupDiscount)
                 .setVisibility(allowDiscount ? View.VISIBLE : View.GONE);
 
@@ -714,16 +864,19 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                             current.customerName =
                                     etName.getText().toString().trim();
-                            current.phone = Fmt.normalizeDigits(
-                                    etPhone.getText().toString());
+
+                            current.phone = Fmt.normalizeDigits(nz(current.phone));
+
                             current.notes =
                                     etNotes.getText().toString().trim();
 
                             if (delivery) {
                                 current.address =
                                         etAddress.getText().toString().trim();
+
                                 current.driver =
                                         etDriver.getText().toString().trim();
+
                                 current.deliveryFee = fee;
                             }
 
@@ -734,6 +887,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                             dialog.dismiss();
                             persist();
                         }));
+
+        dialog.setOnDismissListener(d -> {
+            if (activeCallerPhoneView == etPhone) {
+                activeCallerPhoneView = null;
+            }
+        });
 
         Ui.showRtl(dialog);
     }
@@ -788,6 +947,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         final long id = current.id;
+
         final EditText reason = Ui.editText(
                 this, "سبب الإلغاء (اختياري)", InputType.TYPE_CLASS_TEXT, "");
 
@@ -813,6 +973,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
+        clearStoredCallerNumber();
         newOrder();
         refreshOrderUi();
         Ui.toast(this, "أُلغي الطلب رقم " + id);
@@ -881,6 +1042,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         if (result.success) {
             ensurePrintedState(result.orderId);
+            clearStoredCallerNumber();
             newOrder();
             refreshOrderUi();
             showSuccess(result.message);
