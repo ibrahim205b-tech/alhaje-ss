@@ -42,9 +42,18 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="false"
+            android:exported="true"
+            android:launchMode="singleTop"
             android:screenOrientation="sensorLandscape"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="tel" />
+            </intent-filter>
+
+        </activity>
 
         <activity
             android:name=".OrdersActivity"
@@ -130,3 +139,4 @@
     </application>
 
 </manifest>
+```
