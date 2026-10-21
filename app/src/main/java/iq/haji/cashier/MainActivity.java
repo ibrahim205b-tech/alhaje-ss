@@ -1,4 +1,3 @@
-
 package iq.haji.cashier;
 
 import android.content.Intent;
