@@ -1,6 +1,4 @@
-
 package iq.haji.cashier;
-
 import android.app.role.RoleManager;
 import android.content.Intent;
 import android.os.Bundle;
