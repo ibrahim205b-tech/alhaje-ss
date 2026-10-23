@@ -8,19 +8,18 @@
     android:focusableInTouchMode="true"
     android:orientation="vertical">
 
-    <!-- الشريط العلوي -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="66dp"
+        android:layout_height="58dp"
         android:background="@color/brand_navy"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical">
@@ -29,99 +28,95 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="مطعم الحجي"
-                android:textColor="@color/white"
-                android:textSize="21sp"
+                android:textColor="@color/accent_yellow"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="نظام الكاشير"
-                android:textColor="#BFCBDD"
-                android:textSize="11sp" />
+                android:text="نظام إدارة الطلبات"
+                android:textColor="#D1D8E5"
+                android:textSize="10sp" />
 
         </LinearLayout>
 
         <TextView
             android:id="@+id/chipShift"
             android:layout_width="wrap_content"
-            android:layout_height="42dp"
+            android:layout_height="38dp"
             android:layout_marginEnd="8dp"
             android:background="@drawable/bg_badge"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
             android:textColor="@color/brand_navy"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/chipPrinter"
             android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:layout_marginEnd="12dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
             android:background="@drawable/bg_badge"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
             android:textColor="@color/brand_navy"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnAdministration"
             android:layout_width="wrap_content"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:background="@drawable/bg_nav_button"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:text="☰  الإدارة"
-            android:textColor="@color/white"
-            android:textSize="15sp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="☰ الإدارة"
+            android:textColor="@color/accent_yellow"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
     </LinearLayout>
 
-    <!-- المساحة الرئيسية -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="8dp">
 
-        <!-- منطقة القائمة -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="11"
+            android:layout_weight="14"
             android:orientation="vertical">
 
-            <!-- البحث -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="54dp"
+                android:layout_height="44dp"
                 android:background="@drawable/bg_card"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="14dp"
+                android:paddingStart="10dp"
                 android:paddingEnd="10dp">
 
                 <TextView
-                    android:layout_width="30dp"
+                    android:layout_width="28dp"
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:text="⌕"
-                    android:textColor="@color/brand_red"
-                    android:textSize="27sp"
+                    android:textColor="@color/accent_yellow_dark"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
                 <EditText
@@ -131,50 +126,37 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
-                    android:hint="ابحث عن وجبة أو صنف..."
+                    android:hint="ابحث عن وجبة..."
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:maxLines="1"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="4dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="8dp"
-                android:text="قائمة الطعام"
-                android:textColor="@color/text_primary"
-                android:textSize="19sp"
-                android:textStyle="bold" />
-
-            <!-- الأقسام والمنتجات -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
-                <!-- الأقسام -->
                 <LinearLayout
-                    android:layout_width="112dp"
+                    android:layout_width="100dp"
                     android:layout_height="match_parent"
-                    android:layout_marginEnd="10dp"
+                    android:layout_marginEnd="8dp"
                     android:background="@drawable/bg_card"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="6dp">
 
                     <TextView
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="34dp"
                         android:gravity="center"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="12dp"
                         android:text="الأقسام"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/accent_yellow_dark"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -184,16 +166,14 @@
                         android:layout_height="0dp"
                         android:layout_weight="1"
                         android:clipToPadding="false"
-                        android:paddingBottom="6dp" />
+                        android:paddingBottom="4dp" />
 
                 </LinearLayout>
 
-                <!-- شبكة الأصناف -->
                 <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent">
+                    android:layout_weight="1">
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvProducts"
@@ -202,7 +182,7 @@
                         android:clipToPadding="false"
                         android:paddingStart="2dp"
                         android:paddingEnd="2dp"
-                        android:paddingBottom="8dp" />
+                        android:paddingBottom="4dp" />
 
                     <TextView
                         android:id="@+id/tvNoProducts"
@@ -210,9 +190,9 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:gravity="center"
-                        android:padding="24dp"
+                        android:padding="20dp"
                         android:textColor="@color/text_secondary"
-                        android:textSize="17sp"
+                        android:textSize="15sp"
                         android:visibility="gone" />
 
                 </FrameLayout>
@@ -221,138 +201,104 @@
 
         </LinearLayout>
 
-        <!-- فاصل بصري -->
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:background="@color/stroke" />
 
-        <!-- بطاقة الطلب -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="10"
+            android:layout_weight="6"
             android:background="@drawable/bg_card"
-            android:elevation="2dp"
+            android:elevation="3dp"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="9dp">
 
-            <!-- رأس الطلب -->
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="30dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:text="الطلب"
+                android:textColor="@color/brand_navy"
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+            <TextView
+                android:id="@+id/tvOrderNo"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="الطلب الحالي"
-                        android:textColor="@color/text_primary"
-                        android:textSize="19sp"
-                        android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvOrderTime"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/tvOrderNo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:textColor="@color/brand_red"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvOrderTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_chip"
-                    android:paddingStart="10dp"
-                    android:paddingTop="7dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="7dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-            <!-- نوع الطلب -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
                 android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tvTypeTakeaway"
                     style="@style/Haji.Chip"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="5dp"
+                    android:layout_height="36dp"
                     android:layout_weight="1"
-                    android:paddingStart="3dp"
-                    android:paddingEnd="3dp"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"
                     android:text="سفري"
-                    android:textSize="13sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvTypeDelivery"
                     style="@style/Haji.Chip"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="5dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:paddingStart="3dp"
-                    android:paddingEnd="3dp"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"
                     android:text="دليفري"
-                    android:textSize="13sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvTypeDineIn"
                     style="@style/Haji.Chip"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:paddingStart="2dp"
-                    android:paddingEnd="2dp"
-                    android:text="داخل المطعم"
-                    android:textSize="12sp" />
+                    android:paddingStart="1dp"
+                    android:paddingEnd="1dp"
+                    android:text="داخل"
+                    android:textSize="10sp" />
 
             </LinearLayout>
 
-            <!-- تنبيه الطلب المقفل -->
             <TextView
                 android:id="@+id/tvLockedBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/bg_banner_warning"
-                android:padding="9dp"
+                android:padding="6dp"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
+                android:textSize="11sp"
                 android:visibility="gone" />
 
-            <!-- ملخص وبيانات الطلب -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:background="@color/surface_alt"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="10dp"
-                android:paddingTop="7dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="7dp">
+                android:padding="5dp">
 
                 <TextView
                     android:id="@+id/tvDetailsSummary"
@@ -362,48 +308,33 @@
                     android:ellipsize="end"
                     android:maxLines="2"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/btnDetails"
                     style="@style/Haji.Button.Secondary"
                     android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="6dp"
-                    android:minHeight="40dp"
-                    android:text="بيانات الطلب"
-                    android:textSize="12sp" />
+                    android:layout_height="34dp"
+                    android:minHeight="34dp"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:text="بيانات"
+                    android:textSize="11sp" />
 
             </LinearLayout>
 
-            <!-- الأصناف المضافة -->
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_height="30dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="الأصناف المضافة"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <View
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
-                    android:background="@drawable/bg_circle_red" />
-
-            </LinearLayout>
+                android:text="الأصناف المضافة"
+                android:textColor="@color/brand_navy"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="5dp"
                 android:layout_weight="1">
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -411,7 +342,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:clipToPadding="false"
-                    android:paddingBottom="6dp" />
+                    android:paddingBottom="3dp" />
 
                 <TextView
                     android:id="@+id/tvEmptyOrder"
@@ -419,24 +350,20 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:padding="18dp"
-                    android:text="الطلب فارغ حالياً&#10;اضغط على أي وجبة لإضافتها"
+                    android:padding="10dp"
+                    android:text="الطلب فارغ&#10;أضف وجبة من القائمة"
                     android:textColor="@color/text_hint"
-                    android:textSize="15sp" />
+                    android:textSize="12sp" />
 
             </FrameLayout>
 
-            <!-- ملخص الحساب -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:background="@color/surface_alt"
                 android:orientation="vertical"
-                android:paddingStart="12dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="10dp">
+                android:padding="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -450,14 +377,14 @@
                         android:layout_weight="1"
                         android:text="المجموع"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvSubtotal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -475,15 +402,14 @@
                         android:layout_weight="1"
                         android:text="الخصم"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/tvDiscount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/success"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="11sp" />
 
                 </LinearLayout>
 
@@ -498,25 +424,24 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="أجور التوصيل"
+                        android:text="التوصيل"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/tvDelivery"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textSize="11sp" />
 
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
                     android:background="@color/stroke" />
 
                 <LinearLayout
@@ -525,81 +450,66 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="الإجمالي النهائي"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="دينار عراقي"
-                            android:textColor="@color/text_hint"
-                            android:textSize="10sp" />
-
-                    </LinearLayout>
+                        android:text="الإجمالي النهائي"
+                        android:textColor="@color/brand_navy"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvTotal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/brand_red"
-                        android:textSize="25sp"
+                        android:textColor="@color/accent_yellow_dark"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- أزرار التحكم -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="6dp"
                 android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/btnCancelOrder"
                     style="@style/Haji.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="6dp"
+                    android:layout_height="38dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:minHeight="44dp"
+                    android:minHeight="38dp"
                     android:text="إلغاء الطلب"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/btnNewOrder"
                     style="@style/Haji.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="44dp"
+                    android:layout_height="38dp"
                     android:layout_weight="1"
-                    android:minHeight="44dp"
-                    android:text="＋ طلب جديد"
-                    android:textSize="12sp" />
+                    android:minHeight="38dp"
+                    android:text="+ طلب جديد"
+                    android:textSize="11sp" />
 
             </LinearLayout>
 
-            <!-- زر الطباعة -->
             <TextView
                 android:id="@+id/btnPrint"
                 style="@style/Haji.Button"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="8dp"
-                android:minHeight="56dp"
-                android:text="▣   طباعة الفاتورة"
-                android:textSize="18sp" />
+                android:layout_height="46dp"
+                android:layout_marginTop="6dp"
+                android:minHeight="46dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="طباعة الفاتورة"
+                android:textSize="15sp" />
 
         </LinearLayout>
 
