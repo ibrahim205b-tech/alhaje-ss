@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
+    android:layout_margin="4dp"
     android:background="@drawable/bg_card"
     android:clickable="true"
     android:clipToOutline="true"
@@ -13,7 +13,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="94dp">
+        android:layout_height="70dp">
 
         <ImageView
             android:id="@+id/imgProduct"
@@ -21,19 +21,19 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_product_image"
             android:contentDescription="@null"
-            android:padding="8dp"
+            android:padding="6dp"
             android:scaleType="centerInside" />
 
         <TextView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:layout_gravity="top|end"
-            android:layout_margin="6dp"
+            android:layout_margin="4dp"
             android:background="@drawable/bg_circle_red"
             android:gravity="center"
             android:text="+"
             android:textColor="@color/white"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
     </FrameLayout>
@@ -45,19 +45,19 @@
         android:ellipsize="end"
         android:maxLines="2"
         android:minLines="2"
-        android:paddingStart="9dp"
-        android:paddingTop="9dp"
-        android:paddingEnd="9dp"
+        android:paddingStart="6dp"
+        android:paddingTop="5dp"
+        android:paddingEnd="6dp"
         android:textColor="@color/text_primary"
-        android:textSize="15sp"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginStart="9dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="9dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="6dp"
         android:background="@color/stroke" />
 
     <LinearLayout
@@ -65,10 +65,10 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="9dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="9dp"
-        android:paddingBottom="10dp">
+        android:paddingStart="6dp"
+        android:paddingTop="5dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="6dp">
 
         <TextView
             android:id="@+id/tvPrice"
@@ -76,17 +76,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/brand_red"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:background="@drawable/bg_circle_red"
             android:gravity="center"
             android:text="+"
             android:textColor="@color/white"
-            android:textSize="21sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
     </LinearLayout>
