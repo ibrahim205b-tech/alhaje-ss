@@ -35,7 +35,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="نظام إدارة الطلبات"
+                android:text="نظام إدارة طلبات الدلفري"
                 android:textColor="#D1D8E5"
                 android:textSize="10sp" />
 
@@ -215,16 +215,38 @@
             android:background="@drawable/bg_card"
             android:elevation="3dp"
             android:orientation="vertical"
-            android:padding="9dp">
+            android:padding="8dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:gravity="center_vertical"
-                android:text="الطلب"
-                android:textColor="@color/brand_navy"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="طلب دلفري"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge"
+                    android:paddingStart="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="4dp"
+                    android:text="دلفري"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvOrderNo"
@@ -238,47 +260,23 @@
                 android:layout_height="1dp"
                 android:visibility="gone" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvTypeTakeaway"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/tvTypeTakeaway"
-                    style="@style/Haji.Chip"
-                    android:layout_width="0dp"
-                    android:layout_height="36dp"
-                    android:layout_weight="1"
-                    android:paddingStart="2dp"
-                    android:paddingEnd="2dp"
-                    android:text="سفري"
-                    android:textSize="11sp" />
+            <TextView
+                android:id="@+id/tvTypeDelivery"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/tvTypeDelivery"
-                    style="@style/Haji.Chip"
-                    android:layout_width="0dp"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:paddingStart="2dp"
-                    android:paddingEnd="2dp"
-                    android:text="دليفري"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:id="@+id/tvTypeDineIn"
-                    style="@style/Haji.Chip"
-                    android:layout_width="0dp"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:layout_weight="1"
-                    android:paddingStart="1dp"
-                    android:paddingEnd="1dp"
-                    android:text="داخل"
-                    android:textSize="10sp" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tvTypeDineIn"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tvLockedBanner"
@@ -294,38 +292,104 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="5dp"
                 android:background="@color/surface_alt"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="5dp">
+                android:orientation="vertical"
+                android:padding="6dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="3dp"
+                    android:text="رقم هاتف الزبون"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etMainPhone"
+                    style="@style/Haji.Input"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_card"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:hint="يظهر رقم المتصل هنا"
+                    android:inputType="phone"
+                    android:longClickable="false"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="3dp"
+                    android:text="عنوان الزبون"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etMainAddress"
+                    style="@style/Haji.Input"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_card"
+                    android:hint="اكتب عنوان التوصيل"
+                    android:inputType="textCapSentences"
+                    android:maxLines="1"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="3dp"
+                    android:text="اسم السائق"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etMainDriver"
+                    style="@style/Haji.Input"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_card"
+                    android:hint="اختر أو اكتب اسم السائق"
+                    android:inputType="textCapWords"
+                    android:maxLines="1"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/tvDetailsSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="2"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/btnDetails"
-                    style="@style/Haji.Button.Secondary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:minHeight="34dp"
-                    android:paddingStart="7dp"
-                    android:paddingEnd="7dp"
-                    android:text="بيانات"
-                    android:textSize="11sp" />
+                    android:layout_width="1dp"
+                    android:layout_height="1dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="28dp"
                 android:gravity="center_vertical"
                 android:text="الأصناف المضافة"
                 android:textColor="@color/brand_navy"
@@ -363,7 +427,7 @@
                 android:layout_marginTop="4dp"
                 android:background="@color/surface_alt"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:padding="7dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -504,9 +568,9 @@
                 android:id="@+id/btnPrint"
                 style="@style/Haji.Button"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="44dp"
                 android:layout_marginTop="6dp"
-                android:minHeight="46dp"
+                android:minHeight="44dp"
                 android:background="@drawable/bg_button_primary"
                 android:text="طباعة الفاتورة"
                 android:textSize="15sp" />
