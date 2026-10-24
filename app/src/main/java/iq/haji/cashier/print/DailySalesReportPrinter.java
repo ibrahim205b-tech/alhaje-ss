@@ -1,10 +1,10 @@
-
 package iq.haji.cashier.print;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Handler;
@@ -14,9 +14,7 @@ import android.text.StaticLayout;
 import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.data.DailySalesReportRepository;
@@ -121,151 +119,334 @@ public class DailySalesReportPrinter {
 
         float base = (paper == 58 ? 22f : 26f) * scale;
 
-        List<Line> lines = buildLines(report, settings, base);
+        try {
+            // القياس أولاً لمعرفة الارتفاع، ثم الرسم الفعلي بنفس الخطوات.
+            Sheet measure = new Sheet(null, width, margin, base);
+            build(measure, report, settings);
 
-        int usableWidth = width - margin * 2;
+            int height = (int) Math.ceil(measure.y) + 24;
+            if (height > MAX_HEIGHT) {
+                throw new PrintException(
+                        "التقرير طويل جداً للطباعة دفعة واحدة. قلل عدد الأصناف أو اطبع الفترة على أجزاء");
+            }
 
-        TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.BLACK);
+            Bitmap bitmap = Bitmap.createBitmap(
+                    width, height, Bitmap.Config.ARGB_8888);
 
-        float measuredHeight = 12;
-        for (Line line : lines) {
-            paint.setTextSize(line.size);
-            paint.setTypeface(line.bold
-                    ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(Color.WHITE);
 
-            StaticLayout layout = StaticLayout.Builder.obtain(
-                            line.text, 0, line.text.length(), paint, usableWidth)
-                    .setAlignment(line.center
-                            ? Layout.Alignment.ALIGN_CENTER
-                            : Layout.Alignment.ALIGN_NORMAL)
-                    .setTextDirection(TextDirectionHeuristics.RTL)
-                    .setIncludePad(false)
-                    .build();
+            Sheet draw = new Sheet(canvas, width, margin, base);
+            build(draw, report, settings);
 
-            measuredHeight += layout.getHeight() + line.after;
-        }
+            return bitmap;
 
-        int height = (int) Math.ceil(measuredHeight + 24);
-        if (height > MAX_HEIGHT) {
+        } catch (OutOfMemoryError e) {
             throw new PrintException(
-                    "التقرير طويل جداً للطباعة دفعة واحدة. قلل عدد الأصناف أو اطبع الفترة على أجزاء");
+                    "الذاكرة غير كافية لإنشاء صورة التقرير", e);
         }
-
-        Bitmap bitmap = Bitmap.createBitmap(
-                width, height, Bitmap.Config.ARGB_8888);
-
-        Canvas canvas = new Canvas(bitmap);
-        canvas.drawColor(Color.WHITE);
-
-        float y = 8;
-        for (Line line : lines) {
-            paint.setTextSize(line.size);
-            paint.setTypeface(line.bold
-                    ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-
-            StaticLayout layout = StaticLayout.Builder.obtain(
-                            line.text, 0, line.text.length(), paint, usableWidth)
-                    .setAlignment(line.center
-                            ? Layout.Alignment.ALIGN_CENTER
-                            : Layout.Alignment.ALIGN_NORMAL)
-                    .setTextDirection(TextDirectionHeuristics.RTL)
-                    .setIncludePad(false)
-                    .build();
-
-            canvas.save();
-            canvas.translate(margin, y);
-            layout.draw(canvas);
-            canvas.restore();
-
-            y += layout.getHeight() + line.after;
-        }
-
-        return bitmap;
     }
 
-    private List<Line> buildLines(
+    private void build(
+            Sheet s,
             DailySalesReportRepository.Report report,
-            AppSettings settings,
-            float base
+            AppSettings settings
     ) {
-        List<Line> lines = new ArrayList<>();
+        float base = s.base;
 
-        add(lines, settings.restaurantName(), base * 1.45f, true, true, 5);
-        add(lines, "تقرير مبيعات اليوم", base * 1.15f, true, true, 4);
-        add(lines, "التاريخ: " + Fmt.date(report.from), base, false, true, 4);
-        add(lines, "عدد الفواتير: " + Fmt.number(report.orderCount),
-                base, true, true, 4);
-        rule(lines, base);
+        // ---------------- رأس التقرير ----------------
+        s.space(4);
+        s.center(settings.restaurantName(), base * 1.45f, true);
+        s.space(4);
+        s.banner("تقرير مبيعات اليوم", base * 1.1f);
+        s.space(6);
 
+        s.pair("التاريخ:", Fmt.date(report.from), base * 0.95f, false);
+        s.pair("وقت الطباعة:", Fmt.time(System.currentTimeMillis()),
+                base * 0.95f, false);
+        s.pair("عدد الفواتير:", Fmt.number(report.orderCount),
+                base * 0.95f, true);
+        s.pair("عدد الأقسام:", Fmt.number(report.categories.size()),
+                base * 0.95f, false);
+
+        s.space(4);
+        s.doubleRule();
+
+        // ---------------- الأقسام ----------------
         for (DailySalesReportRepository.CategorySale category
                 : report.categories) {
 
-            add(lines, "القسم: " + category.name,
-                    base * 1.15f, true, true, 5);
-            rule(lines, base);
+            s.space(6);
+            s.banner("القسم: " + category.name, base * 1.05f);
+            s.space(4);
 
+            s.tableRow("الصنف", "العدد", "السعر", "المجموع",
+                    base * 0.85f, true);
+            s.rule(2f);
+
+            int index = 0;
             for (DailySalesReportRepository.ItemSale item : category.items) {
-                add(lines, item.name, base * 1.05f, true, false, 3);
-                add(lines,
-                        "سعر القطعة: " + Fmt.money(item.unitPrice),
-                        base * 0.9f, false, false, 3);
-                add(lines,
-                        "عدد الطلبات: " + Fmt.number(item.orderCount)
-                                + " | القطع: " + Fmt.number(item.quantity),
-                        base * 0.9f, false, false, 3);
-                add(lines,
-                        "إجمالي الصنف: " + Fmt.money(item.total),
-                        base, true, false, 5);
+                if (index > 0) {
+                    s.dashedRule();
+                }
+
+                s.tableRow(
+                        item.name,
+                        Fmt.number(item.quantity),
+                        Fmt.number(item.unitPrice),
+                        Fmt.number(item.total),
+                        base * 0.9f,
+                        false
+                );
+
+                s.note("عدد الطلبات: " + Fmt.number(item.orderCount),
+                        base * 0.72f);
+
+                index++;
             }
 
-            rule(lines, base);
-            add(lines,
-                    "إجمالي القسم: " + Fmt.money(category.total),
-                    base * 1.05f, true, false, 8);
-            rule(lines, base);
+            s.rule(2f);
+            s.pair("إجمالي القسم:", Fmt.money(category.total),
+                    base * 1.0f, true);
+            s.space(4);
         }
 
-        add(lines, "إجمالي مبيعات الأصناف: " + Fmt.money(report.itemTotal),
-                base, true, false, 5);
-        add(lines, "إجمالي الفواتير بعد الخصم والإضافات: "
-                        + Fmt.money(report.invoiceTotal),
-                base * 1.15f, true, false, 8);
-        rule(lines, base);
-        add(lines, "نهاية تقرير اليوم", base, true, true, 12);
+        // ---------------- الملخص ----------------
+        s.doubleRule();
+        s.space(4);
+        s.banner("ملخص اليوم", base * 1.05f);
+        s.space(6);
 
-        return lines;
+        s.pair("عدد الفواتير:", Fmt.number(report.orderCount),
+                base * 0.95f, false);
+        s.pair("إجمالي مبيعات الأصناف:", Fmt.money(report.itemTotal),
+                base * 0.95f, false);
+
+        long difference = report.invoiceTotal - report.itemTotal;
+        if (difference != 0) {
+            s.pair("الخصم والإضافات:",
+                    (difference > 0 ? "+ " : "- ")
+                            + Fmt.money(Math.abs(difference)),
+                    base * 0.95f, false);
+        }
+
+        s.space(4);
+        s.boxStart();
+        s.center("صافي مبيعات اليوم", base * 0.95f, true);
+        s.center(Fmt.money(report.invoiceTotal), base * 1.45f, true);
+        s.boxEnd();
+
+        // ---------------- التذييل ----------------
+        s.space(8);
+        s.center("نهاية تقرير اليوم", base * 0.9f, true);
+        s.center(Fmt.dateTime(System.currentTimeMillis()),
+                base * 0.75f, false);
+        s.space(12);
     }
 
-    private void add(
-            List<Line> lines,
-            String text,
-            float size,
-            boolean bold,
-            boolean center,
-            float after
-    ) {
-        lines.add(new Line(text, size, bold, center, after));
-    }
+    /** ورقة رسم بسيطة: عند canvas == null تقيس الارتفاع فقط. */
+    private static final class Sheet {
+        private final Canvas canvas;
+        private final int width;
+        private final int margin;
+        final float base;
+        float y = 4;
 
-    private void rule(List<Line> lines, float base) {
-        add(lines, "--------------------------------", base * 0.75f,
-                false, true, 5);
-    }
+        private float boxTop = -1;
 
-    private static class Line {
-        final String text;
-        final float size;
-        final boolean bold;
-        final boolean center;
-        final float after;
+        Sheet(Canvas canvas, int width, int margin, float base) {
+            this.canvas = canvas;
+            this.width = width;
+            this.margin = margin;
+            this.base = base;
+        }
 
-        Line(String text, float size, boolean bold, boolean center, float after) {
-            this.text = text;
-            this.size = size;
-            this.bold = bold;
-            this.center = center;
-            this.after = after;
+        int cw() {
+            return width - 2 * margin;
+        }
+
+        TextPaint paint(float size, boolean bold, int color) {
+            TextPaint p = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+            p.setColor(color);
+            p.setTextSize(size);
+            p.setTypeface(bold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            return p;
+        }
+
+        float text(
+                String value,
+                float x,
+                float top,
+                int w,
+                float size,
+                boolean bold,
+                int color,
+                Layout.Alignment alignment
+        ) {
+            if (value == null || value.isEmpty() || w <= 0) {
+                return 0;
+            }
+
+            StaticLayout layout = StaticLayout.Builder.obtain(
+                            value, 0, value.length(),
+                            paint(size, bold, color), w)
+                    .setAlignment(alignment)
+                    .setTextDirection(TextDirectionHeuristics.RTL)
+                    .setIncludePad(false)
+                    .setLineSpacing(0f, 1f)
+                    .build();
+
+            if (canvas != null) {
+                canvas.save();
+                canvas.translate(x, top);
+                layout.draw(canvas);
+                canvas.restore();
+            }
+
+            return layout.getHeight();
+        }
+
+        void center(String value, float size, boolean bold) {
+            y += text(value, margin, y, cw(), size, bold, Color.BLACK,
+                    Layout.Alignment.ALIGN_CENTER) + 3;
+        }
+
+        void note(String value, float size) {
+            int w = (int) (cw() * 0.58f);
+            y += text(value, width - margin - w, y, w, size, false,
+                    Color.BLACK, Layout.Alignment.ALIGN_NORMAL) + 3;
+        }
+
+        /** شريط أسود بعرض الورقة ونص أبيض في الوسط لعناوين الأقسام. */
+        void banner(String value, float size) {
+            float pad = 6;
+            float top = y;
+            float h = text(value, margin, top + pad, cw(), size, true,
+                    Color.WHITE, Layout.Alignment.ALIGN_CENTER);
+
+            // الرسم مرتين: الخلفية أولاً ثم النص فوقها.
+            if (canvas != null) {
+                Paint bg = new Paint();
+                bg.setColor(Color.BLACK);
+                bg.setStyle(Paint.Style.FILL);
+                canvas.drawRect(margin, top, width - margin,
+                        top + h + pad * 2, bg);
+
+                text(value, margin, top + pad, cw(), size, true,
+                        Color.WHITE, Layout.Alignment.ALIGN_CENTER);
+            }
+
+            y = top + h + pad * 2 + 2;
+        }
+
+        /** عنوان على اليمين وقيمة على اليسار في سطر واحد. */
+        void pair(String right, String left, float size, boolean bold) {
+            TextPaint p = paint(size, bold, Color.BLACK);
+
+            int leftWidth = (int) Math.ceil(
+                    p.measureText(left == null ? "" : left)) + 4;
+            leftWidth = Math.min(leftWidth, (int) (cw() * 0.55f));
+
+            int gap = 8;
+            int rightWidth = cw() - leftWidth - gap;
+
+            float rh = text(right, margin + leftWidth + gap, y, rightWidth,
+                    size, bold, Color.BLACK, Layout.Alignment.ALIGN_NORMAL);
+            float lh = text(left, margin, y, leftWidth,
+                    size, bold, Color.BLACK, Layout.Alignment.ALIGN_OPPOSITE);
+
+            y += Math.max(rh, lh) + 4;
+        }
+
+        /** صف جدول: الصنف (يمين) | العدد | السعر | المجموع (يسار). */
+        void tableRow(
+                String name,
+                String qty,
+                String price,
+                String total,
+                float size,
+                boolean bold
+        ) {
+            int c = cw();
+            int totalW = (int) (c * 0.27f);
+            int priceW = (int) (c * 0.23f);
+            int qtyW = (int) (c * 0.12f);
+            int gap = 4;
+            int nameW = c - totalW - priceW - qtyW - gap * 3;
+
+            float xTotal = margin;
+            float xPrice = xTotal + totalW + gap;
+            float xQty = xPrice + priceW + gap;
+            float xName = xQty + qtyW + gap;
+
+            float hName = text(name, xName, y, nameW, size, bold,
+                    Color.BLACK, Layout.Alignment.ALIGN_NORMAL);
+            float hQty = text(qty, xQty, y, qtyW, size, bold,
+                    Color.BLACK, Layout.Alignment.ALIGN_CENTER);
+            float hPrice = text(price, xPrice, y, priceW, size, bold,
+                    Color.BLACK, Layout.Alignment.ALIGN_CENTER);
+            float hTotal = text(total, xTotal, y, totalW, size, bold,
+                    Color.BLACK, Layout.Alignment.ALIGN_OPPOSITE);
+
+            y += Math.max(Math.max(hName, hQty),
+                    Math.max(hPrice, hTotal)) + 3;
+        }
+
+        void rule(float stroke) {
+            if (canvas != null) {
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                p.setColor(Color.BLACK);
+                p.setStrokeWidth(stroke);
+                canvas.drawLine(margin, y + 3, width - margin, y + 3, p);
+            }
+            y += 8;
+        }
+
+        void doubleRule() {
+            if (canvas != null) {
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                p.setColor(Color.BLACK);
+                p.setStrokeWidth(2f);
+                canvas.drawLine(margin, y + 2, width - margin, y + 2, p);
+                canvas.drawLine(margin, y + 7, width - margin, y + 7, p);
+            }
+            y += 12;
+        }
+
+        void dashedRule() {
+            if (canvas != null) {
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                p.setColor(Color.BLACK);
+                p.setStrokeWidth(1f);
+                p.setStyle(Paint.Style.STROKE);
+                p.setPathEffect(new DashPathEffect(new float[]{6f, 5f}, 0f));
+                canvas.drawLine(margin, y + 2, width - margin, y + 2, p);
+            }
+            y += 6;
+        }
+
+        /** إطار حول ملخص الإجمالي النهائي. */
+        void boxStart() {
+            boxTop = y;
+            y += 8;
+        }
+
+        void boxEnd() {
+            y += 4;
+            if (canvas != null && boxTop >= 0) {
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                p.setColor(Color.BLACK);
+                p.setStrokeWidth(3f);
+                p.setStyle(Paint.Style.STROKE);
+                canvas.drawRect(margin + 1, boxTop,
+                        width - margin - 1, y, p);
+            }
+            boxTop = -1;
+            y += 6;
+        }
+
+        void space(float h) {
+            y += h;
         }
     }
 }
