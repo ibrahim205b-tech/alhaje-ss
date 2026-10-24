@@ -3,9 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="6dp">
+    android:paddingTop="6dp"
+    android:paddingBottom="4dp">
 
-    <!-- السطر الأول: اسم الطبق وزر الحذف -->
+    <!-- السطر الأول: اسم الطبق ومجموعه وزر الحذف -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,27 +19,38 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/text_primary"
-            android:textSize="16sp"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvLineTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnDelete"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
             android:text="✕"
             android:textColor="@color/error"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- السطر الثاني: سعر القطعة ومجموع الطبق -->
+    <!-- السطر الثاني: سعر القطعة وبجانبه أزرار التحكم بالكمية -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -51,41 +63,9 @@
             android:textSize="13sp" />
 
         <TextView
-            android:id="@+id/tvLineTotal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- السطر الثالث: الملاحظة وأزرار التحكم بالكمية -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingBottom="8dp">
-
-        <TextView
-            android:id="@+id/tvLineNote"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:minHeight="36dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
-
-        <TextView
             android:id="@+id/btnMinus"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_button_primary"
             android:clickable="true"
             android:focusable="true"
@@ -93,22 +73,22 @@
             android:includeFontPadding="false"
             android:text="−"
             android:textColor="@color/brand_navy"
-            android:textSize="26sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvQty"
-            android:layout_width="40dp"
+            android:layout_width="36dp"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textColor="@color/text_primary"
-            android:textSize="19sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btnPlus"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_button_primary"
             android:clickable="true"
             android:focusable="true"
@@ -116,12 +96,26 @@
             android:includeFontPadding="false"
             android:text="+"
             android:textColor="@color/brand_navy"
-            android:textSize="26sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
     </LinearLayout>
+
+    <!-- السطر الثالث: الملاحظة -->
+    <TextView
+        android:id="@+id/tvLineNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="28dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginTop="2dp"
         android:background="@color/stroke" />
 </LinearLayout>
