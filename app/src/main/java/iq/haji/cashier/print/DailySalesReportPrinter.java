@@ -15,6 +15,7 @@ import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
 
 import java.util.Calendar;
+import java.util.List;
 
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.data.DailySalesReportRepository;
@@ -211,6 +212,46 @@ public class DailySalesReportPrinter {
             s.space(4);
         }
 
+        // ---------------- السائقون ----------------
+        s.doubleRule();
+        s.space(4);
+        s.banner("السائقون", base * 1.05f);
+        s.space(6);
+
+        if (report.drivers.isEmpty()) {
+            s.center("لا توجد طلبات منسوبة لسائق اليوم",
+                    base * 0.9f, false);
+            s.space(4);
+        }
+
+        int driverIndex = 0;
+        for (DailySalesReportRepository.DriverSale driver : report.drivers) {
+            if (driverIndex > 0) {
+                s.dashedRule();
+            }
+
+            s.pair(driver.name,
+                    Fmt.number(driver.orderIds.size()) + " طلب",
+                    base * 1.0f, true);
+            s.note("أرقام الفواتير:", base * 0.8f);
+
+            // أرقام الفواتير في أعمدة، أربعة أرقام في كل سطر.
+            List<Long> ids = driver.orderIds;
+            for (int i = 0; i < ids.size(); i += 4) {
+                String[] cells = new String[4];
+                for (int j = 0; j < 4; j++) {
+                    cells[j] = i + j < ids.size()
+                            ? "#" + ids.get(i + j) : "";
+                }
+                s.gridRow(cells, base * 0.9f);
+            }
+
+            s.space(4);
+            driverIndex++;
+        }
+
+        s.space(4);
+
         // ---------------- الملخص ----------------
         s.doubleRule();
         s.space(4);
@@ -390,6 +431,21 @@ public class DailySalesReportPrinter {
 
             y += Math.max(Math.max(hName, hQty),
                     Math.max(hPrice, hTotal)) + 3;
+        }
+
+        /** صف من خلايا متساوية العرض، يبدأ من اليمين. */
+        void gridRow(String[] cells, float size) {
+            int count = cells.length;
+            int cellW = cw() / count;
+            float h = 0;
+
+            for (int i = 0; i < count; i++) {
+                float x = width - margin - cellW * (i + 1);
+                h = Math.max(h, text(cells[i], x, y, cellW, size, true,
+                        Color.BLACK, Layout.Alignment.ALIGN_CENTER));
+            }
+
+            y += h + 3;
         }
 
         void rule(float stroke) {
