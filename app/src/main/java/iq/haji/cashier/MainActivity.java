@@ -1248,3 +1248,4 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 .setMessage("قبل أول استخدام:\n\n"
                         + "1) تهيئة الطابعة: سيطلب التطبيق إذن «الأجهزة القريبة» للبحث عن طابعة البلوتوث "
                         + "والاتصال بها فقط.
+                            }
