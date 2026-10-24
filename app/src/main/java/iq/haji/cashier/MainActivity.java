@@ -72,6 +72,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private boolean callerPollingStarted = false;
     private long lastProcessedCallTime = 0L;
     private EditText activeCallerPhoneView;
+    private EditText etMainPhone, etMainAddress, etMainDriver;
+    private boolean syncingMainFields = false;
 
     private final Handler callerHandler = new Handler(Looper.getMainLooper());
 
@@ -192,6 +194,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
+        // لا نعلّم المكالمة كمعالجة أثناء وجود طلب محفوظ أو طباعة جارية،
+        // ويبقى الرقم معلقاً حتى يصبح الطلب الجديد جاهزاً.
+        if (current == null || current.id != 0 || printing) {
+            return;
+        }
+
         String phone = prefs.getString("latest_number", "");
         lastProcessedCallTime = callTime;
 
@@ -221,6 +229,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         current.phone = normalizedPhone;
+
+        // طُبّق الرقم على الطلب الحالي، فلا يبقى معلقاً للطلب التالي.
+        getSharedPreferences("haji_call_data", MODE_PRIVATE)
+                .edit()
+                .remove("pending_phone")
+                .apply();
 
         if (activeCallerPhoneView != null) {
             activeCallerPhoneView.setText(nz(current.phone));
@@ -292,6 +306,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         rowDiscount = findViewById(R.id.rowDiscount);
         rowDelivery = findViewById(R.id.rowDelivery);
         rvLines = findViewById(R.id.rvLines);
+        etMainPhone = findViewById(R.id.etMainPhone);
+        etMainAddress = findViewById(R.id.etMainAddress);
+        etMainDriver = findViewById(R.id.etMainDriver);
 
         typeViews[0] = findViewById(R.id.tvTypeTakeaway);
         typeViews[1] = findViewById(R.id.tvTypeDelivery);
@@ -461,6 +478,124 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         btnCancelOrder.setOnClickListener(v -> onCancelOrder());
         btnNewOrder.setOnClickListener(v -> onNewOrder());
         btnPrint.setOnClickListener(v -> onPrint());
+
+        setupMainCustomerFields();
+    }
+
+    private void setupMainCustomerFields() {
+        // رقم الزبون في واجهة الكاشير للعرض فقط ويُملأ تلقائياً من رقم المتصل.
+        // الترتيب مهم: setInputType و setKeyListener و setTextIsSelectable
+        // تعيد تفعيل قابلية التركيز، لذلك نعطّلها بعدها.
+        etMainPhone.setInputType(InputType.TYPE_NULL);
+        etMainPhone.setKeyListener(null);
+        etMainPhone.setTextIsSelectable(false);
+        etMainPhone.setFocusable(false);
+        etMainPhone.setFocusableInTouchMode(false);
+        etMainPhone.setClickable(false);
+        etMainPhone.setLongClickable(false);
+        etMainPhone.setCursorVisible(false);
+
+        etMainAddress.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(
+                    CharSequence s,
+                    int start,
+                    int count,
+                    int after
+            ) {
+            }
+
+            @Override
+            public void onTextChanged(
+                    CharSequence s,
+                    int start,
+                    int before,
+                    int count
+            ) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!canEditMainFields()) {
+                    return;
+                }
+
+                current.address = s.toString().trim();
+                saveDraftQuietly();
+            }
+        });
+
+        etMainDriver.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(
+                    CharSequence s,
+                    int start,
+                    int count,
+                    int after
+            ) {
+            }
+
+            @Override
+            public void onTextChanged(
+                    CharSequence s,
+                    int start,
+                    int before,
+                    int count
+            ) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!canEditMainFields()) {
+                    return;
+                }
+
+                current.driver = s.toString().trim();
+                saveDraftQuietly();
+            }
+        });
+    }
+
+    private boolean canEditMainFields() {
+        return !syncingMainFields
+                && current != null
+                && !locked()
+                && !printing;
+    }
+
+    private void saveDraftQuietly() {
+        current.recalc();
+        orders.saveDraft(current);
+    }
+
+    private void syncMainField(EditText field, String value) {
+        if (field == null) {
+            return;
+        }
+
+        String text = field.getText() == null
+                ? "" : field.getText().toString();
+
+        if (!text.trim().equals(nz(value).trim())) {
+            field.setText(nz(value));
+        }
+    }
+
+    private void refreshMainCustomerFields(boolean isLocked) {
+        syncingMainFields = true;
+
+        try {
+            syncMainField(etMainPhone, current.phone);
+            syncMainField(etMainAddress, current.address);
+            syncMainField(etMainDriver, current.driver);
+        } finally {
+            syncingMainFields = false;
+        }
+
+        boolean editable = !isLocked && !printing;
+
+        etMainAddress.setEnabled(editable);
+        etMainDriver.setEnabled(editable);
     }
 
     private void open(Class<?> cls) {
@@ -817,14 +952,16 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         final EditText etPhone = view.findViewById(R.id.etPhone);
 
         // رقم الهاتف للعرض فقط. لا يسمح بإدخاله أو تغييره يدوياً.
+        // الترتيب مهم: setInputType و setKeyListener و setTextIsSelectable
+        // تعيد تفعيل قابلية التركيز، لذلك نعطّلها بعدها.
+        etPhone.setInputType(InputType.TYPE_NULL);
         etPhone.setKeyListener(null);
+        etPhone.setTextIsSelectable(false);
         etPhone.setFocusable(false);
         etPhone.setFocusableInTouchMode(false);
         etPhone.setClickable(false);
         etPhone.setLongClickable(false);
         etPhone.setCursorVisible(false);
-        etPhone.setTextIsSelectable(false);
-        etPhone.setInputType(InputType.TYPE_NULL);
 
         activeCallerPhoneView = etPhone;
 
@@ -1327,6 +1464,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             tvDetailsSummary.setTextColor(ContextCompat.getColor(
                     this, R.color.text_secondary));
         }
+
+        refreshMainCustomerFields(isLocked);
 
         lineAdapter.setLines(current.lines, isLocked);
 
