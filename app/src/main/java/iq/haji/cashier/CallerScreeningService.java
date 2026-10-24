@@ -13,6 +13,12 @@ public class CallerScreeningService extends CallScreeningService {
         }
 
         try {
+            // نلتقط رقم المكالمات الواردة فقط حتى لا يستبدل
+            // اتصال الكاشير بالسائق رقم الزبون.
+            if (details.getCallDirection() != Call.Details.DIRECTION_INCOMING) {
+                return;
+            }
+
             Uri handle = details.getHandle();
 
             if (handle != null) {
