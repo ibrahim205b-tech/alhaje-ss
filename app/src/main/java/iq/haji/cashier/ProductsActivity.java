@@ -9,14 +9,11 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,8 +30,6 @@ import iq.haji.cashier.model.Product;
 import iq.haji.cashier.ui.RowAdapter;
 import iq.haji.cashier.util.AppException;
 import iq.haji.cashier.util.Fmt;
-import iq.haji.cashier.util.ImageCache;
-import iq.haji.cashier.util.ImageStore;
 import iq.haji.cashier.util.PinDialog;
 import iq.haji.cashier.util.Ui;
 import iq.haji.cashier.util.UiKit;
@@ -47,19 +42,6 @@ public class ProductsActivity extends PageActivity {
     private List<Category> cats = new ArrayList<>();
     private long selectedCat = 0;
     private String query = "";
-
-    private ImageView dlgImage;
-    private String dlgImagePath;
-
-    private final ActivityResultLauncher<String> imagePicker = registerForActivityResult(
-            new ActivityResultContracts.GetContent(), uri -> {
-                if (uri == null || dlgImage == null) return;
-                final ImageView target = dlgImage;
-                this.<String>bg(() -> ImageStore.importImage(this, uri), path -> {
-                    dlgImagePath = path;
-                    ImageCache.load(target, path);
-                });
-            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,8 +229,6 @@ public class ProductsActivity extends PageActivity {
             Ui.toast(this, "أضف قسماً أولاً");
             return;
         }
-        dlgImagePath = existing == null ? null : existing.imageUri;
-
         LinearLayout col = UiKit.vertical(this);
         int pad = Ui.dp(this, 20);
         col.setPadding(pad, Ui.dp(this, 8), pad, 0);
@@ -280,26 +260,6 @@ public class ProductsActivity extends PageActivity {
                 existing == null || existing.active);
         col.addView(swActive, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
 
-        col.addView(UiKit.label(this, "صورة (اختيارية)"), UiKit.lp(this, UiKit.WRAP, UiKit.WRAP, 8));
-        LinearLayout imgRow = UiKit.row(this);
-        imgRow.setGravity(Gravity.CENTER_VERTICAL);
-        dlgImage = new ImageView(this);
-        dlgImage.setBackgroundResource(R.drawable.bg_product_image);
-        ImageCache.load(dlgImage, dlgImagePath);
-        imgRow.addView(dlgImage, new LinearLayout.LayoutParams(Ui.dp(this, 90), Ui.dp(this, 90)));
-        TextView pick = UiKit.button(this, "اختيار صورة", false);
-        pick.setOnClickListener(v -> imagePicker.launch("image/*"));
-        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(UiKit.WRAP, UiKit.WRAP);
-        pp.setMarginStart(Ui.dp(this, 12));
-        imgRow.addView(pick, pp);
-        TextView clear = UiKit.button(this, "إزالة", false);
-        clear.setOnClickListener(v -> {
-            dlgImagePath = null;
-            ImageCache.load(dlgImage, null);
-        });
-        imgRow.addView(clear, pp);
-        col.addView(imgRow, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 4));
-
         ScrollView sv = new ScrollView(this);
         sv.addView(col);
 
@@ -310,7 +270,6 @@ public class ProductsActivity extends PageActivity {
                 .setNegativeButton(R.string.cancel, null);
         if (existing != null) b.setNeutralButton(R.string.delete, null);
         final AlertDialog d = b.create();
-        d.setOnDismissListener(x -> dlgImage = null);
         d.setOnShowListener(x -> {
             d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                 long price = Fmt.parseMoney(etPrice.getText().toString());
@@ -323,7 +282,8 @@ public class ProductsActivity extends PageActivity {
                 np.categoryId = cats.get(sp.getSelectedItemPosition()).id;
                 np.name = etName.getText().toString();
                 np.price = price;
-                np.imageUri = dlgImagePath;
+                // الصور أُزيلت من الأصناف؛ نحتفظ بالقيمة القديمة كما هي دون عرضها.
+                np.imageUri = existing == null ? null : existing.imageUri;
                 np.active = swActive.isChecked();
                 Runnable save = () -> {
                     try {
