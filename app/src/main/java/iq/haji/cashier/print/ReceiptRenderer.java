@@ -15,7 +15,6 @@ import iq.haji.cashier.R;
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.model.Order;
 import iq.haji.cashier.model.OrderLine;
-import iq.haji.cashier.model.OrderType;
 import iq.haji.cashier.util.Fmt;
 
 public class ReceiptRenderer {
@@ -118,8 +117,6 @@ public class ReceiptRenderer {
     }
 
     private void buildReceipt(Sheet s, Order o) {
-        boolean delivery = OrderType.DELIVERY.equals(o.type);
-
         String name = st.restaurantName();
         String phone = st.get(
                 AppSettings.RESTAURANT_PHONE, ""
@@ -154,38 +151,7 @@ public class ReceiptRenderer {
 
         s.rule();
 
-        // معلومات الطلب
-        if (!delivery) {
-            s.pair(
-                    "النوع:",
-                    OrderType.label(o.type),
-                    base * 0.9f,
-                    false
-            );
-
-            if (notEmpty(o.cashierName)) {
-                s.pair(
-                        "الموظف:",
-                        o.cashierName,
-                        base * 0.9f,
-                        false
-                );
-            }
-
-            if (o.shiftId > 0) {
-                s.pair(
-                        "الوردية:",
-                        "#" + o.shiftId,
-                        base * 0.9f,
-                        false
-                );
-            }
-        }
-
-        if (notEmpty(o.customerName)) {
-            s.pair("الزبون:", o.customerName, base, false);
-        }
-
+        // معلومات الطلب: رقم الزبون والعنوان والسائق فقط.
         if (notEmpty(o.phone)) {
             s.pair("رقم الزبون:", o.phone, base, false);
         }
