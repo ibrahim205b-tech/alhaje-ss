@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
@@ -829,6 +830,13 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         etAddress.setText(nz(current.address));
         etDriver.setText(nz(current.driver));
 
+        // اجعل حقل السائق يفتح قائمة الاختيار بدلاً من الكتابة اليدوية.
+        etDriver.setKeyListener(null);
+        etDriver.setFocusable(false);
+        etDriver.setFocusableInTouchMode(false);
+        etDriver.setClickable(true);
+        etDriver.setOnClickListener(v -> showDriverPicker(etDriver));
+
         if (current.deliveryFee > 0) {
             etFee.setText(String.valueOf(current.deliveryFee));
         }
@@ -916,6 +924,43 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 activeCallerPhoneView = null;
             }
         });
+
+        Ui.showRtl(dialog);
+    }
+
+    private void showDriverPicker(EditText target) {
+        String saved = getSharedPreferences(
+                "haji_driver_data",
+                MODE_PRIVATE
+        ).getString("drivers", "حسين\nأحمد\nعلي\nجبار");
+
+        List<String> names = new ArrayList<>();
+
+        if (saved != null) {
+            for (String line : saved.split("\\r?\\n")) {
+                String name = line.trim();
+
+                if (!name.isEmpty()) {
+                    names.add(name);
+                }
+            }
+        }
+
+        names.add("بدون سائق");
+
+        String[] options = names.toArray(new String[0]);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("اختيار السائق")
+                .setItems(options, (d, which) -> {
+                    String selected = options[which];
+
+                    target.setText(
+                            "بدون سائق".equals(selected) ? "" : selected
+                    );
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .create();
 
         Ui.showRtl(dialog);
     }
