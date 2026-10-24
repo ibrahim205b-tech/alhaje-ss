@@ -28,6 +28,12 @@ public class DailySalesReportRepository {
         public final List<ItemSale> items = new ArrayList<>();
     }
 
+    /** طلبات اليوم المنسوبة لسائق واحد، بأرقام فواتيرها. */
+    public static class DriverSale {
+        public String name;
+        public final List<Long> orderIds = new ArrayList<>();
+    }
+
     public static class Report {
         public long from;
         public long toExclusive;
@@ -35,6 +41,7 @@ public class DailySalesReportRepository {
         public long invoiceTotal;
         public long itemTotal;
         public final List<CategorySale> categories = new ArrayList<>();
+        public final List<DriverSale> drivers = new ArrayList<>();
     }
 
     private static final String SALE_STATUSES =
@@ -111,6 +118,34 @@ public class DailySalesReportRepository {
         }
 
         report.categories.addAll(grouped.values());
+
+        // السائقون: عدد الطلبات وأرقام الفواتير لكل سائق.
+        Map<String, DriverSale> byDriver = new LinkedHashMap<>();
+
+        String driverSql =
+                "SELECT TRIM(driver), id FROM orders " +
+                "WHERE created_at>=? AND created_at<? " +
+                "AND status IN " + SALE_STATUSES +
+                " AND driver IS NOT NULL AND TRIM(driver)<>'' " +
+                "ORDER BY TRIM(driver), id";
+
+        try (Cursor c = db().rawQuery(driverSql, new String[]{
+                String.valueOf(from), String.valueOf(toExclusive)})) {
+            while (c.moveToNext()) {
+                String driverName = c.getString(0);
+                DriverSale driver = byDriver.get(driverName);
+
+                if (driver == null) {
+                    driver = new DriverSale();
+                    driver.name = driverName;
+                    byDriver.put(driverName, driver);
+                }
+
+                driver.orderIds.add(c.getLong(1));
+            }
+        }
+
+        report.drivers.addAll(byDriver.values());
         return report;
     }
 }
