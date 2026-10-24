@@ -190,15 +190,18 @@ public class ReceiptRenderer {
             s.pair("رقم الزبون:", o.phone, base, false);
         }
 
-        if (delivery && notEmpty(o.address)) {
+        // يُطبع العنوان والسائق متى ما أُدخلا، لأن واجهة الكاشير
+        // تحفظهما للطلب مباشرة بغض النظر عن نوعه.
+        // العنوان بخط عريض وأكبر قليلاً حتى يُقرأ بوضوح.
+        if (notEmpty(o.address)) {
             s.info(
                     "العنوان: " + o.address.trim(),
-                    base,
-                    false
+                    base * 1.15f,
+                    true
             );
         }
 
-        if (delivery && notEmpty(o.driver)) {
+        if (notEmpty(o.driver)) {
             s.pair("السائق:", o.driver.trim(), base, false);
         }
 
