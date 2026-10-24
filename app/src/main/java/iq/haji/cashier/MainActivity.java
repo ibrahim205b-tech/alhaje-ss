@@ -210,27 +210,42 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
-        if (current == null || current.id != 0 || printing) {
-            CallNumberStore.save(this, phone);
+        String normalizedPhone = Fmt.normalizeDigits(phone.trim());
+        if (normalizedPhone.isEmpty()) {
             return;
         }
 
-        current.phone = Fmt.normalizeDigits(phone);
-
-        if (activeCallerPhoneView != null) {
-            activeCallerPhoneView.setText(nz(current.phone));
+        // لا نغيّر طلباً محفوظاً أو قيد الطباعة؛ نخزّن الرقم للطلب التالي.
+        if (current == null || current.id != 0 || printing) {
+            CallNumberStore.save(this, normalizedPhone);
+            return;
         }
 
+        current.phone = normalizedPhone;
+
+        if (activeCallerPhoneView != null) {
+            activeCallerPhoneView.setText(normalizedPhone);
+        }
+
+        // persist() يحفظ المسودة ويحدّث ملخص بيانات الزبون على الواجهة الرئيسية.
         persist();
     }
 
     private void applyPendingCallerNumber() {
-        String phone = CallNumberStore.consume(this);
+        android.content.SharedPreferences prefs = getSharedPreferences(
+                "haji_call_data", MODE_PRIVATE);
+        String phone = prefs.getString("pending_phone", "");
 
         if (phone == null || phone.trim().isEmpty()) {
             return;
         }
 
+        // لا تستهلك الرقم إذا كان الطلب الحالي محفوظاً أو الطباعة جارية.
+        if (current == null || current.id != 0 || printing) {
+            return;
+        }
+
+        prefs.edit().remove("pending_phone").apply();
         applyCallerNumberToDraft(phone);
         Ui.toast(this, "تم إدراج رقم الزبون تلقائياً");
     }
@@ -1109,8 +1124,19 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         if (result.success) {
             ensurePrintedState(result.orderId);
+
+            // احتفظ برقم مكالمة وصل أثناء انتظار طباعة طلب سابق، وانقله للمسودة الجديدة.
+            android.content.SharedPreferences callPrefs = getSharedPreferences(
+                    "haji_call_data", MODE_PRIVATE);
+            String queuedPhone = callPrefs.getString("pending_phone", "");
+
             clearStoredCallerNumber();
             newOrder();
+
+            if (queuedPhone != null && !queuedPhone.trim().isEmpty()) {
+                applyCallerNumberToDraft(queuedPhone);
+            }
+
             refreshOrderUi();
             showSuccess(result.message);
             return;
@@ -1221,181 +1247,4 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 .setTitle("مرحباً بك في دليفري الحجي")
                 .setMessage("قبل أول استخدام:\n\n"
                         + "1) تهيئة الطابعة: سيطلب التطبيق إذن «الأجهزة القريبة» للبحث عن طابعة البلوتوث "
-                        + "والاتصال بها فقط. لا يُستخدم هذا الإذن لتحديد موقعك. ويمكنك بدلاً من ذلك استخدام "
-                        + "طابعة شبكية بعنوان IP.\n\n"
-                        + "2) ابدأ وردية من شاشة «الوردية» قبل أول طلب.")
-                .setCancelable(false)
-                .setPositiveButton("تهيئة الطابعة الآن", (d, w) -> {
-                    settings.setBool(AppSettings.SETUP_DONE, true);
-                    Intent intent = new Intent(
-                            this, PrinterSettingsActivity.class);
-                    intent.putExtra("first_run", true);
-                    startActivity(intent);
-                })
-                .setNegativeButton(
-                        "لاحقاً",
-                        (d, w) -> settings.setBool(
-                                AppSettings.SETUP_DONE, true))
-                .create();
-
-        Ui.showRtl(dialog);
-    }
-
-    private void refreshOrderUi() {
-        current.recalc();
-        boolean isLocked = locked();
-        boolean delivery = OrderType.DELIVERY.equals(current.type);
-
-        tvOrderNo.setText("طلب رقم "
-                + (isLocked ? current.id : orders.nextOrderNumber()));
-        tvOrderTime.setText(Fmt.dateTime(current.createdAt));
-
-        for (int i = 0; i < typeViews.length; i++) {
-            boolean selected = TYPE_CODES[i].equals(current.type);
-
-            typeViews[i].setVisibility(
-                    typeEnabled(TYPE_CODES[i]) ? View.VISIBLE : View.GONE);
-
-            typeViews[i].setSelected(selected);
-            typeViews[i].setTextColor(ContextCompat.getColor(
-                    this,
-                    selected ? R.color.white : R.color.text_primary));
-        }
-
-        if (isLocked) {
-            tvLockedBanner.setText("الطلب رقم " + current.id
-                    + " محفوظ بانتظار الطباعة. اضغط «إعادة المحاولة» أو ألغِ الطلب.");
-            tvLockedBanner.setVisibility(View.VISIBLE);
-        } else {
-            tvLockedBanner.setVisibility(View.GONE);
-        }
-
-        List<String> parts = new ArrayList<>();
-
-        if (!isBlank(current.customerName)) {
-            parts.add(current.customerName.trim());
-        }
-
-        if (!isBlank(current.phone)) {
-            parts.add(current.phone.trim());
-        }
-
-        if (delivery && !isBlank(current.address)) {
-            parts.add(current.address.trim());
-        }
-
-        if (delivery && !isBlank(current.driver)) {
-            parts.add("السائق: " + current.driver.trim());
-        }
-
-        if (parts.isEmpty()) {
-            tvDetailsSummary.setText(
-                    delivery ? "أدخل عنوان التوصيل (مطلوب)" : "لا توجد بيانات زبون");
-
-            tvDetailsSummary.setTextColor(ContextCompat.getColor(
-                    this,
-                    delivery ? R.color.error : R.color.text_hint));
-        } else {
-            tvDetailsSummary.setText(join(parts, "  •  "));
-            tvDetailsSummary.setTextColor(ContextCompat.getColor(
-                    this, R.color.text_secondary));
-        }
-
-        lineAdapter.setLines(current.lines, isLocked);
-
-        tvEmptyOrder.setVisibility(
-                current.lines.isEmpty() ? View.VISIBLE : View.GONE);
-
-        tvSubtotal.setText(Fmt.money(current.subtotal));
-
-        rowDiscount.setVisibility(
-                current.discount > 0 ? View.VISIBLE : View.GONE);
-
-        tvDiscount.setText("- " + Fmt.money(current.discount));
-
-        rowDelivery.setVisibility(
-                delivery && current.deliveryFee > 0 ? View.VISIBLE : View.GONE);
-
-        tvDelivery.setText(Fmt.money(current.deliveryFee));
-        tvTotal.setText(Fmt.money(current.total));
-
-        boolean canPrint = !printing
-                && (isLocked || !current.lines.isEmpty());
-
-        btnPrint.setEnabled(canPrint);
-        btnPrint.setAlpha(canPrint ? 1f : 0.5f);
-
-        btnPrint.setText(
-                printing ? "جارٍ الطباعة..."
-                        : (isLocked ? "إعادة المحاولة" : "طباعة الفاتورة"));
-
-        btnCancelOrder.setAlpha(printing ? 0.5f : 1f);
-        btnNewOrder.setAlpha(printing ? 0.5f : 1f);
-    }
-
-    private static String join(List<String> parts, String separator) {
-        StringBuilder result = new StringBuilder();
-
-        for (int i = 0; i < parts.size(); i++) {
-            if (i > 0) {
-                result.append(separator);
-            }
-
-            result.append(parts.get(i));
-        }
-
-        return result.toString();
-    }
-
-    private void refreshChips() {
-        Shift shift = shifts.getOpenShift();
-
-        if (shift == null) {
-            chipShift.setText("لا توجد وردية — ابدأ وردية");
-            chipShift.setTextColor(ContextCompat.getColor(
-                    this, R.color.error));
-        } else {
-            chipShift.setText("الوردية #" + shift.id + " مفتوحة");
-            chipShift.setTextColor(ContextCompat.getColor(
-                    this, R.color.success));
-        }
-
-        refreshPrinterChip();
-    }
-
-    private void refreshPrinterChip() {
-        PrinterManager manager = PrinterManager.get(this);
-        String text;
-        int color;
-
-        if (!manager.hasSelectedPrinter()) {
-            text = "الطابعة: غير محددة";
-            color = R.color.warning;
-        } else {
-            switch (manager.getState()) {
-                case CONNECTED:
-                    text = "الطابعة: متصلة";
-                    color = R.color.success;
-                    break;
-
-                case CONNECTING:
-                    text = "الطابعة: جارٍ الاتصال...";
-                    color = R.color.warning;
-                    break;
-
-                case ERROR:
-                    text = "الطابعة: خطأ اتصال";
-                    color = R.color.error;
-                    break;
-
-                default:
-                    text = "الطابعة: تتصل عند الطباعة";
-                    color = R.color.text_secondary;
-                    break;
-            }
-        }
-
-        chipPrinter.setText(text);
-        chipPrinter.setTextColor(ContextCompat.getColor(this, color));
-    }
-}
+                        + "والاتصال بها فقط.
