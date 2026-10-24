@@ -532,6 +532,22 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             }
         });
 
+        // اسم السائق يُختار من قائمة السائقين المسجّلين في الإعدادات، ولا يُكتب يدوياً.
+        etMainDriver.setInputType(InputType.TYPE_NULL);
+        etMainDriver.setKeyListener(null);
+        etMainDriver.setTextIsSelectable(false);
+        etMainDriver.setFocusable(false);
+        etMainDriver.setFocusableInTouchMode(false);
+        etMainDriver.setCursorVisible(false);
+        etMainDriver.setLongClickable(false);
+        etMainDriver.setClickable(true);
+        etMainDriver.setHint("🛵 اضغط لاختيار السائق");
+        etMainDriver.setOnClickListener(v -> {
+            if (canEditMainFields()) {
+                showDriverPicker(etMainDriver);
+            }
+        });
+
         etMainDriver.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(
