@@ -316,8 +316,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void setupLists() {
+        // عرض منطقة الأصناف تقريباً: 14 من 19 من عرض الشاشة ناقص عمود الأقسام.
+        // البطاقة بحجم متوسط، وأقل عدد ثلاثة أعمدة.
         int widthDp = getResources().getConfiguration().screenWidthDp;
-        int span = Math.max(2, (int) ((widthDp * 0.5f - 125) / 145));
+        float productsDp = (widthDp - 41) * 14f / 19f - 116;
+        int span = Math.max(3, (int) (productsDp / 125));
 
         RecyclerView rvProducts = findViewById(R.id.rvProducts);
         rvProducts.setLayoutManager(new GridLayoutManager(this, span));
