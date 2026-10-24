@@ -211,6 +211,8 @@
             android:layout_marginEnd="10dp"
             android:background="@color/stroke" />
 
+        <!-- لوحة الطلب: الجزء العلوي قابل للتمرير حتى تظهر الأصناف المضافة
+             وأزرار + و − دائماً، والأزرار الرئيسية ثابتة في الأسفل. -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -218,326 +220,319 @@
             android:background="@drawable/bg_card"
             android:elevation="4dp"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="8dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="طلب دلفري"
-                    android:textColor="@color/brand_navy"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge"
-                    android:paddingStart="10dp"
-                    android:paddingTop="4dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="4dp"
-                    android:text="دلفري"
-                    android:textColor="@color/brand_navy"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvOrderNo"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvOrderTime"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvTypeTakeaway"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvTypeDelivery"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvTypeDineIn"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvLockedBanner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/bg_banner_warning"
-                android:padding="6dp"
-                android:textColor="@color/text_primary"
-                android:textSize="11sp"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:background="@color/surface_alt"
-                android:orientation="vertical"
-                android:padding="6dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="3dp"
-                    android:text="رقم هاتف الزبون"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etMainPhone"
-                    style="@style/Haji.Input"
-                    android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_card"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:hint="يظهر رقم المتصل هنا"
-                    android:inputType="phone"
-                    android:longClickable="false"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:singleLine="true"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="3dp"
-                    android:text="عنوان الزبون"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etMainAddress"
-                    style="@style/Haji.Input"
-                    android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_card"
-                    android:hint="اكتب عنوان التوصيل"
-                    android:inputType="textCapSentences"
-                    android:maxLines="1"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:singleLine="true"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="3dp"
-                    android:text="اسم السائق"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etMainDriver"
-                    style="@style/Haji.Input"
-                    android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_card"
-                    android:hint="اختر أو اكتب اسم السائق"
-                    android:inputType="textCapWords"
-                    android:maxLines="1"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:singleLine="true"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvDetailsSummary"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/btnDetails"
-                    android:layout_width="1dp"
-                    android:layout_height="1dp"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="28dp"
-                android:gravity="center_vertical"
-                android:text="الأصناف المضافة"
-                android:textColor="@color/brand_navy"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollOrderPanel"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvLines"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clipToPadding="false"
-                    android:paddingBottom="3dp" />
-
-                <TextView
-                    android:id="@+id/tvEmptyOrder"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:text="الطلب فارغ&#10;أضف وجبة من القائمة"
-                    android:textColor="@color/text_hint"
-                    android:textSize="12sp" />
-
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@color/surface_alt"
-                android:orientation="vertical"
-                android:padding="7dp">
+                android:layout_weight="1"
+                android:fillViewport="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="28dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical"
+                            android:text="طلب دلفري"
+                            android:textColor="@color/brand_navy"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_badge"
+                            android:paddingStart="10dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="3dp"
+                            android:text="دلفري"
+                            android:textColor="@color/brand_navy"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="المجموع"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:id="@+id/tvOrderNo"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:visibility="gone" />
 
                     <TextView
-                        android:id="@+id/tvSubtotal"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvOrderTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvTypeTakeaway"
+                        android:layout_width="1dp"
+                        android:layout_height="1dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvTypeDelivery"
+                        android:layout_width="1dp"
+                        android:layout_height="1dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvTypeDineIn"
+                        android:layout_width="1dp"
+                        android:layout_height="1dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvLockedBanner"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/bg_banner_warning"
+                        android:padding="6dp"
                         android:textColor="@color/text_primary"
+                        android:textSize="11sp"
+                        android:visibility="gone" />
+
+                    <!-- بيانات الزبون مضغوطة: العنوان داخل الحقل نفسه بدل سطر منفصل -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@color/surface_alt"
+                        android:orientation="vertical"
+                        android:padding="5dp">
+
+                        <EditText
+                            android:id="@+id/etMainPhone"
+                            style="@style/Haji.Input"
+                            android:layout_width="match_parent"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_card"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:hint="📞 رقم الزبون (يظهر تلقائياً)"
+                            android:inputType="phone"
+                            android:longClickable="false"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:singleLine="true"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp" />
+
+                        <EditText
+                            android:id="@+id/etMainAddress"
+                            style="@style/Haji.Input"
+                            android:layout_width="match_parent"
+                            android:layout_height="34dp"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_card"
+                            android:hint="📍 عنوان الزبون"
+                            android:inputType="textCapSentences"
+                            android:maxLines="1"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:singleLine="true"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp" />
+
+                        <EditText
+                            android:id="@+id/etMainDriver"
+                            style="@style/Haji.Input"
+                            android:layout_width="match_parent"
+                            android:layout_height="34dp"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_card"
+                            android:hint="🛵 اسم السائق"
+                            android:inputType="textCapWords"
+                            android:maxLines="1"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:singleLine="true"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvDetailsSummary"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/btnDetails"
+                            android:layout_width="1dp"
+                            android:layout_height="1dp"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center_vertical"
+                        android:text="الأصناف المضافة"
+                        android:textColor="@color/accent_yellow_dark"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="60dp">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvLines"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clipToPadding="false"
+                            android:nestedScrollingEnabled="false"
+                            android:paddingBottom="3dp" />
+
+                        <TextView
+                            android:id="@+id/tvEmptyOrder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:text="الطلب فارغ&#10;أضف وجبة من القائمة"
+                            android:textColor="@color/text_hint"
+                            android:textSize="12sp" />
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@color/surface_alt"
+                        android:orientation="vertical"
+                        android:padding="7dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="المجموع"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/tvSubtotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/rowDiscount"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="الخصم"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/tvDiscount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/success"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/rowDelivery"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="التوصيل"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/tvDelivery"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginBottom="5dp"
+                            android:background="@color/stroke" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="الإجمالي النهائي"
+                                android:textColor="@color/text_primary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvTotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/accent_yellow_dark"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
-                <LinearLayout
-                    android:id="@+id/rowDiscount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
+            </androidx.core.widget.NestedScrollView>
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="الخصم"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/tvDiscount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/success"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/rowDelivery"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="التوصيل"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/tvDelivery"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:background="@color/stroke" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="الإجمالي النهائي"
-                        android:textColor="@color/brand_navy"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvTotal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/accent_yellow_dark"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
+            <!-- الأزرار الرئيسية في سطر واحد ثابت أسفل اللوحة -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -548,35 +543,45 @@
                     android:id="@+id/btnCancelOrder"
                     style="@style/Haji.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="38dp"
+                    android:layout_height="44dp"
                     android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:minHeight="38dp"
-                    android:text="إلغاء الطلب"
-                    android:textSize="11sp" />
+                    android:minHeight="44dp"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"
+                    android:text="إلغاء"
+                    android:textColor="@color/error"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/btnNewOrder"
                     style="@style/Haji.Button.Secondary"
                     android:layout_width="0dp"
-                    android:layout_height="38dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:minHeight="38dp"
-                    android:text="+ طلب جديد"
-                    android:textSize="11sp" />
+                    android:minHeight="44dp"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"
+                    android:text="+ جديد"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/btnPrint"
+                    style="@style/Haji.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="2"
+                    android:minHeight="44dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:background="@drawable/bg_button_primary"
+                    android:text="طباعة الفاتورة"
+                    android:textColor="@color/brand_navy"
+                    android:textSize="14sp" />
 
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnPrint"
-                style="@style/Haji.Button"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:layout_marginTop="6dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_button_primary"
-                android:text="طباعة الفاتورة"
-                android:textSize="15sp" />
 
         </LinearLayout>
 
