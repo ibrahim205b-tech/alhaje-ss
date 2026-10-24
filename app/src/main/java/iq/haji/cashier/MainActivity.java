@@ -2,6 +2,7 @@ package iq.haji.cashier;
 
 import android.app.role.RoleManager;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -99,6 +101,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private View rowDiscount, rowDelivery;
     private final TextView[] typeViews = new TextView[3];
     private RecyclerView rvLines;
+    private NestedScrollView scrollOrderPanel;
 
     private ProductAdapter productAdapter;
     private CategoryAdapter categoryAdapter;
@@ -306,6 +309,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         rowDiscount = findViewById(R.id.rowDiscount);
         rowDelivery = findViewById(R.id.rowDelivery);
         rvLines = findViewById(R.id.rvLines);
+        scrollOrderPanel = findViewById(R.id.scrollOrderPanel);
         etMainPhone = findViewById(R.id.etMainPhone);
         etMainAddress = findViewById(R.id.etMainAddress);
         etMainDriver = findViewById(R.id.etMainDriver);
@@ -847,7 +851,9 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
-        for (OrderLine line : current.lines) {
+        for (int i = 0; i < current.lines.size(); i++) {
+            OrderLine line = current.lines.get(i);
+
             if (line.productId == product.id
                     && (line.note == null || line.note.trim().isEmpty())) {
                 if (line.qty < 999) {
@@ -855,6 +861,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 }
 
                 persist();
+                scrollToLine(i);
                 return;
             }
         }
@@ -867,7 +874,41 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         current.lines.add(line);
 
         persist();
-        rvLines.scrollToPosition(current.lines.size() - 1);
+        scrollToLine(current.lines.size() - 1);
+    }
+
+    /** يمرّر لوحة الطلب حتى يظهر الطبق المضاف مع أزرار + و −. */
+    private void scrollToLine(final int position) {
+        if (scrollOrderPanel == null || position < 0) {
+            return;
+        }
+
+        // ننتظر قليلاً حتى تُرسم القائمة بعد التحديث.
+        scrollOrderPanel.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+
+            RecyclerView.LayoutManager manager = rvLines.getLayoutManager();
+            View row = manager == null ? null : manager.findViewByPosition(position);
+
+            if (row == null) {
+                return;
+            }
+
+            Rect rect = new Rect();
+            row.getDrawingRect(rect);
+            scrollOrderPanel.offsetDescendantRectToMyCoords(row, rect);
+
+            int top = scrollOrderPanel.getScrollY();
+            int bottom = top + scrollOrderPanel.getHeight();
+
+            if (rect.bottom > bottom) {
+                scrollOrderPanel.smoothScrollTo(0, rect.bottom - scrollOrderPanel.getHeight());
+            } else if (rect.top < top) {
+                scrollOrderPanel.smoothScrollTo(0, rect.top);
+            }
+        }, 80L);
     }
 
     private void changeQty(OrderLine line, int delta) {
