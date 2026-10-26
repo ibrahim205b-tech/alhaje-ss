@@ -1658,11 +1658,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         tvDiscount.setText("- " + Fmt.money(current.discount));
 
-        rowDelivery.setVisibility(
-                delivery && current.deliveryFee > 0 ? View.VISIBLE : View.GONE);
+        // أجور التوصيل داخلية: لا تظهر في شاشة الكاشير، وتُحسب وتُطبع تلقائياً في الوصل.
+        rowDelivery.setVisibility(View.GONE);
 
         tvDelivery.setText(Fmt.money(current.deliveryFee));
-        tvTotal.setText(Fmt.money(current.total));
+        tvTotal.setText(Fmt.money(current.total - current.deliveryFee));
 
         boolean canPrint = !printing
                 && (isLocked || !current.lines.isEmpty());
