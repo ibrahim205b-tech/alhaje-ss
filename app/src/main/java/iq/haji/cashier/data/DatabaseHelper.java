@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "alhaje_ss.db";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
 
     private static DatabaseHelper instance;
 
@@ -86,6 +86,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "status TEXT NOT NULL,"
                 + "customer_name TEXT,"
                 + "phone TEXT,"
+                + "whatsapp TEXT,"
                 + "address TEXT,"
                 + "driver TEXT,"
                 + "notes TEXT,"
@@ -137,7 +138,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // الإصدار 1 فقط حالياً. أي ترقية مستقبلية تُضاف هنا بدون مسح البيانات.
+        // كل ترقية تضيف ما ينقص فقط دون حذف أي بيانات.
+        if (oldVersion < 2) {
+            // الإصدار 2: رقم واتساب الزبون يُكتب يدوياً بجانب رقم المتصل.
+            db.execSQL("ALTER TABLE orders ADD COLUMN whatsapp TEXT");
+        }
     }
 
     /** بيانات أولية قابلة للتعديل والحذف بالكامل من شاشة إدارة الأصناف. */

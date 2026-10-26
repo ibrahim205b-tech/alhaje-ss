@@ -83,7 +83,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private boolean callerPollingStarted = false;
     private long lastProcessedCallTime = 0L;
     private EditText activeCallerPhoneView;
-    private EditText etMainPhone, etMainAddress, etMainDriver;
+    private EditText etMainPhone, etMainWhatsapp, etMainAddress;
     private boolean syncingMainFields = false;
 
     private final Handler callerHandler = new Handler(Looper.getMainLooper());
@@ -321,7 +321,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         scrollOrderPanel = findViewById(R.id.scrollOrderPanel);
         etMainPhone = findViewById(R.id.etMainPhone);
         etMainAddress = findViewById(R.id.etMainAddress);
-        etMainDriver = findViewById(R.id.etMainDriver);
+        etMainWhatsapp = findViewById(R.id.etMainWhatsapp);
 
         typeViews[0] = findViewById(R.id.tvTypeTakeaway);
         typeViews[1] = findViewById(R.id.tvTypeDelivery);
@@ -332,8 +332,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         // عرض منطقة الأصناف تقريباً: 14 من 19 من عرض الشاشة ناقص عمود الأقسام.
         // البطاقة بحجم متوسط، وأقل عدد ثلاثة أعمدة.
         int widthDp = getResources().getConfiguration().screenWidthDp;
-        float productsDp = (widthDp - 41) * 14f / 19f - 116;
-        int span = Math.max(3, (int) (productsDp / 125));
+        float productsDp = (widthDp - 41) * 14f / 19f - 158;
+        int span = Math.max(3, (int) (productsDp / 150));
 
         RecyclerView rvProducts = findViewById(R.id.rvProducts);
         rvProducts.setLayoutManager(new GridLayoutManager(this, span));
@@ -394,7 +394,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                     "⏱ الورديات",
                     "🖨 إعدادات الطابعة",
                     "⚙ الإعدادات",
-                    "📞 تفعيل رقم المتصل"
+                    "📞 تفعيل رقم المتصل",
+                    "🛵 السائقون"
             };
 
             new AlertDialog.Builder(this)
@@ -427,6 +428,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                             case 6:
                                 requestCallerScreeningRole();
+                                break;
+
+                            case 7:
+                                open(DriversActivity.class);
                                 break;
                         }
                     })
@@ -541,23 +546,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             }
         });
 
-        // اسم السائق يُختار من قائمة السائقين المسجّلين في الإعدادات، ولا يُكتب يدوياً.
-        etMainDriver.setInputType(InputType.TYPE_NULL);
-        etMainDriver.setKeyListener(null);
-        etMainDriver.setTextIsSelectable(false);
-        etMainDriver.setFocusable(false);
-        etMainDriver.setFocusableInTouchMode(false);
-        etMainDriver.setCursorVisible(false);
-        etMainDriver.setLongClickable(false);
-        etMainDriver.setClickable(true);
-        etMainDriver.setHint("🛵 اضغط لاختيار السائق");
-        etMainDriver.setOnClickListener(v -> {
-            if (canEditMainFields()) {
-                showDriverPicker(etMainDriver);
-            }
-        });
-
-        etMainDriver.addTextChangedListener(new TextWatcher() {
+        // رقم واتساب الزبون يُكتب يدوياً، والحقل الأول يبقى لرقم المتصل التلقائي.
+        etMainWhatsapp.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(
                     CharSequence s,
@@ -582,7 +572,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                     return;
                 }
 
-                current.driver = s.toString().trim();
+                current.whatsapp = Fmt.normalizeDigits(s.toString());
                 saveDraftQuietly();
             }
         });
@@ -618,16 +608,16 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         try {
             syncMainField(etMainPhone, current.phone);
+            syncMainField(etMainWhatsapp, current.whatsapp);
             syncMainField(etMainAddress, current.address);
-            syncMainField(etMainDriver, current.driver);
         } finally {
             syncingMainFields = false;
         }
 
         boolean editable = !isLocked && !printing;
 
+        etMainWhatsapp.setEnabled(editable);
         etMainAddress.setEnabled(editable);
-        etMainDriver.setEnabled(editable);
     }
 
     private void open(Class<?> cls) {
@@ -705,8 +695,26 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             }
 
             normalizeType();
+            applyDefaultDelivery();
         } else {
             newOrder();
+        }
+    }
+
+    /** أجور التوصيل التلقائية: قيمة الإعدادات إن وُجدت، وإلا 1000 د.ع. */
+    private long defaultDeliveryFee() {
+        long fee = settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
+        return fee > 0 ? fee : 1000;
+    }
+
+    /** كل طلب دلفري تلقائياً مع أجور التوصيل، ما دام نوع الدلفري مفعّلاً. */
+    private void applyDefaultDelivery() {
+        if (!typeEnabled(OrderType.DELIVERY)) {
+            return;
+        }
+        current.type = OrderType.DELIVERY;
+        if (current.deliveryFee <= 0) {
+            current.deliveryFee = defaultDeliveryFee();
         }
     }
 
@@ -715,11 +723,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         current.createdAt = System.currentTimeMillis();
         current.type = TYPE_CODES[0];
         normalizeType();
-
-        if (OrderType.DELIVERY.equals(current.type)) {
-            current.deliveryFee =
-                    settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
-        }
+        applyDefaultDelivery();
     }
 
     private void resetOrder() {
@@ -811,8 +815,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         current.type = type;
 
         if (OrderType.DELIVERY.equals(type) && current.deliveryFee == 0) {
-            current.deliveryFee =
-                    settings.getLong(AppSettings.DEFAULT_DELIVERY_FEE, 0);
+            current.deliveryFee = defaultDeliveryFee();
         }
 
         persist();
@@ -1413,13 +1416,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 showNoShiftDialog();
                 return;
             }
-
-            if (OrderType.DELIVERY.equals(current.type)
-                    && isBlank(current.address)) {
-                Ui.toast(this, "أدخل عنوان التوصيل لطلب الدليفري");
-                showDetailsDialog();
-                return;
-            }
         }
 
         if (!PrinterManager.get(this).hasSelectedPrinter()) {
@@ -1593,7 +1589,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         boolean isLocked = locked();
         boolean delivery = OrderType.DELIVERY.equals(current.type);
 
-        tvOrderNo.setText("طلب رقم "
+        tvOrderNo.setText("فاتورة رقم #"
                 + (isLocked ? current.id : orders.nextOrderNumber()));
         tvOrderTime.setText(Fmt.dateTime(current.createdAt));
 

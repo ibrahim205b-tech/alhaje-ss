@@ -3,7 +3,6 @@ package iq.haji.cashier;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.Gravity;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -18,7 +17,6 @@ import androidx.appcompat.widget.SwitchCompat;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -35,10 +33,6 @@ import iq.haji.cashier.util.UiKit;
 
 public class SettingsActivity extends PageActivity {
 
-    private static final String DRIVER_PREFS = "haji_driver_data";
-    private static final String DRIVER_LIST_KEY = "drivers";
-    private static final String DEFAULT_DRIVERS = "حسين\nأحمد\nعلي\nجبار";
-
     private AppSettings st;
     private AdminGuard guard;
 
@@ -48,7 +42,6 @@ public class SettingsActivity extends PageActivity {
     private EditText etFooter;
     private EditText etCashier;
     private EditText etFee;
-    private EditText etDrivers;
 
     private SwitchCompat swTakeaway;
     private SwitchCompat swDelivery;
@@ -167,57 +160,11 @@ public class SettingsActivity extends PageActivity {
 
         etFee = field(
                 orders,
-                "أجور التوصيل الافتراضية (د.ع)",
+                "أجور التوصيل (د.ع) — تُضاف تلقائياً لكل فاتورة، وتُستخدم 1000 إذا تُرك فارغاً",
                 InputType.TYPE_CLASS_NUMBER);
 
         col.addView(
                 orders,
-                UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
-
-        // إدارة السائقين
-        LinearLayout drivers = UiKit.card(this);
-
-        drivers.addView(
-                UiKit.title(this, "إدارة السائقين"));
-
-        drivers.addView(
-                UiKit.hint(
-                        this,
-                        "اكتب اسم كل سائق في سطر مستقل. " +
-                        "تُحفظ الأسماء على الجهاز دون الحاجة إلى الإنترنت."));
-
-        etDrivers = new EditText(this);
-        etDrivers.setMinLines(4);
-        etDrivers.setMaxLines(10);
-        etDrivers.setGravity(Gravity.TOP | Gravity.RIGHT);
-        etDrivers.setTextDirection(android.view.View.TEXT_DIRECTION_RTL);
-        etDrivers.setInputType(
-                InputType.TYPE_CLASS_TEXT
-                        | InputType.TYPE_TEXT_FLAG_MULTI_LINE
-                        | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        etDrivers.setSingleLine(false);
-        etDrivers.setHint("حسين\nأحمد\nعلي\nجبار");
-        etDrivers.setPadding(
-                Ui.dp(this, 12),
-                Ui.dp(this, 12),
-                Ui.dp(this, 12),
-                Ui.dp(this, 12));
-
-        drivers.addView(
-                etDrivers,
-                UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
-
-        TextView saveDriversButton =
-                UiKit.button(this, "حفظ قائمة السائقين", false);
-
-        saveDriversButton.setOnClickListener(v -> saveDrivers());
-
-        drivers.addView(
-                saveDriversButton,
-                UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
-
-        col.addView(
-                drivers,
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
 
         TextView save = UiKit.button(this, "حفظ الإعدادات", true);
@@ -277,55 +224,7 @@ public class SettingsActivity extends PageActivity {
 
         etFee.setText(fee > 0 ? String.valueOf(fee) : "");
 
-        loadDrivers();
         refreshPin();
-    }
-
-    // ==================== حفظ وإدارة السائقين ====================
-
-    private void loadDrivers() {
-        String saved = getSharedPreferences(
-                DRIVER_PREFS,
-                MODE_PRIVATE).getString(
-                        DRIVER_LIST_KEY,
-                        DEFAULT_DRIVERS);
-
-        etDrivers.setText(saved == null ? DEFAULT_DRIVERS : saved);
-    }
-
-    private void saveDrivers() {
-        String raw = etDrivers.getText().toString();
-
-        LinkedHashSet<String> uniqueNames = new LinkedHashSet<>();
-
-        for (String line : raw.split("\\r?\\n")) {
-            String name = line.trim();
-
-            if (!name.isEmpty()) {
-                uniqueNames.add(name);
-            }
-        }
-
-        StringBuilder result = new StringBuilder();
-
-        for (String name : uniqueNames) {
-            if (result.length() > 0) {
-                result.append('\n');
-            }
-
-            result.append(name);
-        }
-
-        String drivers = result.toString();
-
-        getSharedPreferences(DRIVER_PREFS, MODE_PRIVATE)
-                .edit()
-                .putString(DRIVER_LIST_KEY, drivers)
-                .apply();
-
-        etDrivers.setText(drivers);
-
-        Ui.toast(this, "تم حفظ قائمة السائقين");
     }
 
     private void save() {
@@ -391,9 +290,6 @@ public class SettingsActivity extends PageActivity {
                 swDiscount.isChecked());
 
         st.setLong(AppSettings.DEFAULT_DELIVERY_FEE, fee);
-
-        // حفظ قائمة السائقين أيضاً عند حفظ الإعدادات العامة.
-        saveDrivers();
 
         Ui.toast(this, "تم حفظ الإعدادات");
     }

@@ -146,7 +146,7 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="108dp"
+                    android:layout_width="150dp"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:background="@drawable/bg_card"
@@ -240,36 +240,18 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
+                        <!-- رقم الفاتورة فقط أعلى مربع الطلب -->
                         <TextView
+                            android:id="@+id/tvOrderNo"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:gravity="center_vertical"
-                            android:text="طلب دلفري"
-                            android:textColor="@color/brand_navy"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_badge"
-                            android:paddingStart="10dp"
-                            android:paddingTop="3dp"
-                            android:paddingEnd="10dp"
-                            android:paddingBottom="3dp"
-                            android:text="دلفري"
-                            android:textColor="@color/brand_navy"
-                            android:textSize="11sp"
+                            android:textColor="@color/accent_yellow_dark"
+                            android:textSize="18sp"
                             android:textStyle="bold" />
 
                     </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvOrderNo"
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/tvOrderTime"
@@ -333,6 +315,22 @@
                             android:textSize="13sp" />
 
                         <EditText
+                            android:id="@+id/etMainWhatsapp"
+                            style="@style/Haji.Input"
+                            android:layout_width="match_parent"
+                            android:layout_height="34dp"
+                            android:layout_marginTop="4dp"
+                            android:background="@drawable/bg_card"
+                            android:hint="💬 رقم الزبون واتساب"
+                            android:inputType="phone"
+                            android:maxLines="1"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:singleLine="true"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp" />
+
+                        <EditText
                             android:id="@+id/etMainAddress"
                             style="@style/Haji.Input"
                             android:layout_width="match_parent"
@@ -341,22 +339,6 @@
                             android:background="@drawable/bg_card"
                             android:hint="📍 عنوان الزبون"
                             android:inputType="textCapSentences"
-                            android:maxLines="1"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:singleLine="true"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp" />
-
-                        <EditText
-                            android:id="@+id/etMainDriver"
-                            style="@style/Haji.Input"
-                            android:layout_width="match_parent"
-                            android:layout_height="34dp"
-                            android:layout_marginTop="4dp"
-                            android:background="@drawable/bg_card"
-                            android:hint="🛵 اسم السائق"
-                            android:inputType="textCapWords"
                             android:maxLines="1"
                             android:paddingStart="8dp"
                             android:paddingEnd="8dp"

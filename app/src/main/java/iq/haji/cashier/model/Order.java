@@ -13,6 +13,8 @@ public class Order {
     public String status = OrderStatus.NEW;
     public String customerName;
     public String phone;
+    /** رقم واتساب الزبون، يُكتب يدوياً (اختياري). */
+    public String whatsapp;
     public String address;
     public String driver;
     public String notes;

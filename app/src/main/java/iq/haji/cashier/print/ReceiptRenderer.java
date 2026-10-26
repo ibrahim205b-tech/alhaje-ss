@@ -156,6 +156,10 @@ public class ReceiptRenderer {
             s.pair("رقم الزبون:", o.phone, base, false);
         }
 
+        if (notEmpty(o.whatsapp)) {
+            s.pair("واتساب:", o.whatsapp.trim(), base, false);
+        }
+
         // يُطبع العنوان والسائق متى ما أُدخلا، لأن واجهة الكاشير
         // تحفظهما للطلب مباشرة بغض النظر عن نوعه.
         // العنوان بخط عريض وأكبر قليلاً حتى يُقرأ بوضوح.

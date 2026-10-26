@@ -29,7 +29,7 @@ public class OrderRepository {
     private static final String DRAFT_KEY = "draft_order";
     private static final String ORDER_COLS = "id,uuid,created_at,shift_id,type,status,customer_name,phone,"
             + "address,driver,notes,payment_method,delivery_fee,discount,subtotal,total,print_count,"
-            + "printed_at,cashier_name";
+            + "printed_at,cashier_name,whatsapp";
 
     private final Context ctx;
     private final AppSettings settings;
@@ -65,6 +65,7 @@ public class OrderRepository {
             j.put("type", o.type);
             j.put("customerName", o.customerName == null ? "" : o.customerName);
             j.put("phone", o.phone == null ? "" : o.phone);
+            j.put("whatsapp", o.whatsapp == null ? "" : o.whatsapp);
             j.put("address", o.address == null ? "" : o.address);
             j.put("driver", o.driver == null ? "" : o.driver);
             j.put("notes", o.notes == null ? "" : o.notes);
@@ -97,6 +98,7 @@ public class OrderRepository {
             o.type = j.optString("type", OrderType.TAKEAWAY);
             o.customerName = j.optString("customerName", "");
             o.phone = j.optString("phone", "");
+            o.whatsapp = j.optString("whatsapp", "");
             o.address = j.optString("address", "");
             o.driver = j.optString("driver", "");
             o.notes = j.optString("notes", "");
@@ -146,11 +148,6 @@ public class OrderRepository {
             if (l.unitPrice < 0) throw new AppException("سعر غير صحيح للصنف: " + l.name);
         }
         checkTypeEnabled(o.type);
-        if (OrderType.DELIVERY.equals(o.type)) {
-            if (o.address == null || o.address.trim().isEmpty()) {
-                throw new AppException("أدخل عنوان التوصيل لطلب الدليفري");
-            }
-        }
         if (o.discount > 0 && !settings.getBool(AppSettings.ALLOW_DISCOUNT, true)) {
             throw new AppException("الخصم غير مفعّل في الإعدادات");
         }
@@ -199,6 +196,7 @@ public class OrderRepository {
             cv.put("print_count", 0);
             cv.put("printed_at", 0);
             cv.put("cashier_name", cashier);
+            cv.put("whatsapp", nz(o.whatsapp));
             newId = db.insert("orders", null, cv);
             if (newId < 0) throw new AppException("تعذر حفظ الطلب");
 
@@ -267,6 +265,7 @@ public class OrderRepository {
         o.printCount = c.getInt(16);
         o.printedAt = c.getLong(17);
         o.cashierName = c.getString(18);
+        o.whatsapp = c.isNull(19) ? "" : c.getString(19);
         return o;
     }
 
