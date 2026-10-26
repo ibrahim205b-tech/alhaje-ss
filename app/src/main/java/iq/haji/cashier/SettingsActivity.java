@@ -24,6 +24,7 @@ import iq.haji.cashier.data.AdminGuard;
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.data.AuditLog;
 import iq.haji.cashier.data.BackupManager;
+import iq.haji.cashier.data.DriverStore;
 import iq.haji.cashier.print.PrinterManager;
 import iq.haji.cashier.util.AppException;
 import iq.haji.cashier.util.Fmt;
@@ -167,12 +168,47 @@ public class SettingsActivity extends PageActivity {
                 orders,
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
 
+        // السائقون: كل اسم هنا يظهر كزر في الشاشة الرئيسية لنسب الطلبات.
+        LinearLayout drivers = UiKit.card(this);
+        drivers.addView(UiKit.title(this, "السائقون"));
+        drivers.addView(UiKit.hint(this,
+                "اكتب اسم كل سائق في سطر مستقل. يظهر لكل سائق زر في أعلى شاشة الكاشير بجانب الوردية."));
+        final EditText etDrivers = Ui.editText(this, "حسين\nعباس",
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE, joinDrivers());
+        etDrivers.setSingleLine(false);
+        etDrivers.setMinLines(4);
+        etDrivers.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        drivers.addView(etDrivers, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
+        TextView saveDrivers = UiKit.button(this, "حفظ أسماء السائقين", false);
+        saveDrivers.setOnClickListener(v -> {
+            java.util.List<String> names = new java.util.ArrayList<>();
+            for (String line : etDrivers.getText().toString().split("\\r?\\n")) {
+                names.add(line);
+            }
+            DriverStore.save(this, names);
+            etDrivers.setText(joinDrivers());
+            Ui.toast(this, "تم حفظ أسماء السائقين");
+        });
+        drivers.addView(saveDrivers, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
+        col.addView(drivers, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
+
         TextView save = UiKit.button(this, "حفظ الإعدادات", true);
         save.setOnClickListener(v -> save());
 
         col.addView(
                 save,
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12));
+    }
+
+    private String joinDrivers() {
+        StringBuilder sb = new StringBuilder();
+        for (String n : DriverStore.load(this)) {
+            if (sb.length() > 0) {
+                sb.append('\n');
+            }
+            sb.append(n);
+        }
+        return sb.toString();
     }
 
     private EditText field(

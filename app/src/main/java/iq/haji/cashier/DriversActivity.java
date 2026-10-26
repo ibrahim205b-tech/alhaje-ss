@@ -3,10 +3,8 @@ package iq.haji.cashier;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,8 +34,9 @@ import iq.haji.cashier.util.Ui;
 import iq.haji.cashier.util.UiKit;
 
 /**
- * شاشة السائقين: زر لكل سائق، الطلبات غير المنسوبة مع زر «نسب»، طلبات السائق المختار
+ * تقارير السائقين (من الإدارة): زر لكل سائق، الطلبات غير المنسوبة، طلبات السائق المختار
  * مع معاينة الفاتورة كما تخرج من الطابعة، وطباعة وردية السائق وتقرير كل الحركات.
+ * النسب نفسه يتم من أزرار السائقين في أعلى شاشة الكاشير.
  * النطاق: الوردية المفتوحة (أو آخر وردية إذا لم تكن هناك وردية مفتوحة).
  */
 public class DriversActivity extends PageActivity {
@@ -59,10 +58,9 @@ public class DriversActivity extends PageActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setPageTitle("السائقون");
+        setPageTitle("تقارير السائقين");
         orders = new OrderRepository(this);
 
-        addAction("إدارة الأسماء", this::manageNames);
         addAction("وردية السائق", this::printDriverShift);
         addAction("تقرير كل السائقين", this::printAllDrivers);
 
@@ -182,7 +180,7 @@ public class DriversActivity extends PageActivity {
     private void buildDriverButtons() {
         driverButtons.removeAllViews();
         if (drivers.isEmpty()) {
-            driverButtons.addView(UiKit.text(this, "لا يوجد سائقون. اضغط «إدارة الأسماء» لإضافتهم.",
+            driverButtons.addView(UiKit.text(this, "لا يوجد سائقون. أضفهم من الإعدادات ← السائقون.",
                     15, R.color.warning, true));
             return;
         }
@@ -225,18 +223,6 @@ public class DriversActivity extends PageActivity {
             TextView no = UiKit.text(this, "فاتورة #" + o.id, 18, R.color.text_primary, true);
             no.setOnClickListener(v -> showReceipt(o.id));
             row.addView(no, new LinearLayout.LayoutParams(0, UiKit.WRAP, 1f));
-            TextView assign = new TextView(this);
-            assign.setText(selected == null ? "اختر سائقاً" : "نسب إلى " + selected);
-            assign.setTextSize(14);
-            assign.setTypeface(Typeface.DEFAULT_BOLD);
-            assign.setGravity(Gravity.CENTER);
-            assign.setPadding(Ui.dp(this, 12), 0, Ui.dp(this, 12), 0);
-            assign.setBackgroundResource(R.drawable.bg_button_primary);
-            assign.setTextColor(ContextCompat.getColor(this, R.color.brand_navy));
-            assign.setEnabled(selected != null && shiftOpen());
-            assign.setAlpha(assign.isEnabled() ? 1f : 0.5f);
-            assign.setOnClickListener(v -> assign(o.id, selected));
-            row.addView(assign, new LinearLayout.LayoutParams(UiKit.WRAP, Ui.dp(this, 44)));
             unassignedBox.addView(row);
             unassignedBox.addView(divider());
         }
@@ -304,20 +290,6 @@ public class DriversActivity extends PageActivity {
 
     // ---------------- النسب ----------------
 
-    private void assign(long orderId, String driver) {
-        if (driver == null) {
-            Ui.toast(this, "اختر سائقاً أولاً");
-            return;
-        }
-        try {
-            orders.updateDriver(orderId, driver);
-            Ui.toast(this, "نُسبت الفاتورة #" + orderId + " إلى " + driver);
-            reload();
-        } catch (AppException e) {
-            Ui.toast(this, e.getMessage());
-        }
-    }
-
     private void unassign(final Order o) {
         if (!shiftOpen()) {
             Ui.toast(this, "الوردية مغلقة، لا يمكن تعديل طلباتها");
@@ -337,42 +309,6 @@ public class DriversActivity extends PageActivity {
                 .setNegativeButton(R.string.back, null)
                 .create();
         Ui.showRtl(d);
-    }
-
-    // ---------------- الأسماء ----------------
-
-    private void manageNames() {
-        final EditText et = Ui.editText(this, "اسم كل سائق في سطر مستقل",
-                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE, joinNames());
-        et.setSingleLine(false);
-        et.setMinLines(5);
-        et.setGravity(Gravity.TOP | Gravity.START);
-        AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("أسماء السائقين")
-                .setView(Ui.wrap(this, et))
-                .setPositiveButton(R.string.save, (x, w) -> {
-                    List<String> names = new ArrayList<>();
-                    for (String line : et.getText().toString().split("\\r?\\n")) {
-                        names.add(line);
-                    }
-                    DriverStore.save(this, names);
-                    Ui.toast(this, "تم حفظ أسماء السائقين");
-                    reload();
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .create();
-        Ui.showRtl(d);
-    }
-
-    private String joinNames() {
-        StringBuilder sb = new StringBuilder();
-        for (String n : drivers) {
-            if (sb.length() > 0) {
-                sb.append('\n');
-            }
-            sb.append(n);
-        }
-        return sb.toString();
     }
 
     // ---------------- التقارير والطباعة ----------------

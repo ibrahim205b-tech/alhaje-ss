@@ -15,6 +15,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -36,6 +37,7 @@ import java.util.Set;
 
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.data.CatalogRepository;
+import iq.haji.cashier.data.DriverStore;
 import iq.haji.cashier.data.OrderRepository;
 import iq.haji.cashier.data.ShiftRepository;
 import iq.haji.cashier.model.Category;
@@ -84,6 +86,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private long lastProcessedCallTime = 0L;
     private EditText activeCallerPhoneView;
     private EditText etMainPhone, etMainWhatsapp, etMainAddress;
+    private LinearLayout driverBar;
     private boolean syncingMainFields = false;
 
     private final Handler callerHandler = new Handler(Looper.getMainLooper());
@@ -174,6 +177,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         reloadCatalog();
         refreshOrderUi();
         refreshChips();
+        buildDriverBar();
         maybeShowFirstRun();
         startCallerPolling();
     }
@@ -301,6 +305,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
     private void bindViews() {
         chipShift = findViewById(R.id.chipShift);
+        driverBar = findViewById(R.id.driverBar);
         chipPrinter = findViewById(R.id.chipPrinter);
         tvOrderNo = findViewById(R.id.tvOrderNo);
         tvOrderTime = findViewById(R.id.tvOrderTime);
@@ -391,11 +396,10 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                     "🧾 الطلبات",
                     "🍕 الأصناف والأقسام",
                     "📊 التقارير",
-                    "⏱ الورديات",
+                    "🛵 تقارير السائقين",
                     "🖨 إعدادات الطابعة",
                     "⚙ الإعدادات",
-                    "📞 تفعيل رقم المتصل",
-                    "🛵 السائقون"
+                    "📞 تفعيل رقم المتصل"
             };
 
             new AlertDialog.Builder(this)
@@ -415,7 +419,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                                 break;
 
                             case 3:
-                                open(ShiftActivity.class);
+                                open(DriversActivity.class);
                                 break;
 
                             case 4:
@@ -428,10 +432,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
                             case 6:
                                 requestCallerScreeningRole();
-                                break;
-
-                            case 7:
-                                open(DriversActivity.class);
                                 break;
                         }
                     })
@@ -1690,6 +1690,84 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         return result.toString();
+    }
+
+    // ---------------- نسب الطلبات للسائقين من الشاشة الرئيسية ----------------
+
+    /** زر لكل سائق من قائمة السائقين في الإعدادات، بجانب زر الوردية. */
+    private void buildDriverBar() {
+        if (driverBar == null) {
+            return;
+        }
+        driverBar.removeAllViews();
+        for (final String name : DriverStore.load(this)) {
+            TextView b = new TextView(this);
+            b.setText("🛵 " + name);
+            b.setTextSize(14);
+            b.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            b.setGravity(Gravity.CENTER);
+            b.setBackgroundResource(R.drawable.bg_badge);
+            b.setTextColor(ContextCompat.getColor(this, R.color.brand_navy));
+            b.setPadding(Ui.dp(this, 14), 0, Ui.dp(this, 14), 0);
+            b.setOnClickListener(v -> showAssignDialog(name));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, Ui.dp(this, 40));
+            lp.setMarginEnd(Ui.dp(this, 6));
+            driverBar.addView(b, lp);
+        }
+    }
+
+    /** آخر الطلبات غير المنسوبة في الوردية المفتوحة، الأحدث أولاً. */
+    private List<Order> unassignedOrders(long shiftId) {
+        List<Order> out = new ArrayList<>();
+        for (Order o : orders.listOrders(shiftId, null, 0, 0, null, 500)) {
+            if (!OrderStatus.CANCELLED.equals(o.status) && isBlank(o.driver)) {
+                out.add(o);
+            }
+        }
+        return out;
+    }
+
+    private void showAssignDialog(final String driver) {
+        Shift shift = shifts.getOpenShift();
+        if (shift == null) {
+            Ui.toast(this, "لا توجد وردية مفتوحة");
+            return;
+        }
+        final List<Order> list = unassignedOrders(shift.id);
+        if (list.isEmpty()) {
+            Ui.toast(this, "لا توجد طلبات غير منسوبة");
+            return;
+        }
+        final List<String> labels = new ArrayList<>();
+        for (Order o : list) {
+            labels.add("فاتورة #" + o.id + "    " + Fmt.time(o.createdAt) + "    " + Fmt.money(o.total));
+        }
+        final android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, labels);
+        android.widget.ListView lv = new android.widget.ListView(this);
+        lv.setAdapter(adapter);
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("نسب طلب إلى " + driver + " — اضغط على الفاتورة")
+                .setView(lv)
+                .setNegativeButton(R.string.close, null)
+                .create();
+        lv.setOnItemClickListener((parent, view, pos, id) -> {
+            Order o = list.get(pos);
+            try {
+                orders.updateDriver(o.id, driver);
+                Ui.toast(this, "نُسبت الفاتورة #" + o.id + " إلى " + driver);
+                list.remove(pos);
+                labels.remove(pos);
+                adapter.notifyDataSetChanged();
+                if (list.isEmpty()) {
+                    dialog.dismiss();
+                }
+            } catch (AppException e) {
+                Ui.toast(this, e.getMessage());
+            }
+        });
+        Ui.showRtl(dialog);
     }
 
     private void refreshChips() {
