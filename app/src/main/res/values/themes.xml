@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Haji" parent="Theme.Material3.Light.NoActionBar">
+    <!-- ثيم داكن موحّد: كل الشاشات والنوافذ والقوائم المنسدلة بخلفية كحلية ونص فاتح. -->
+    <style name="Theme.Haji" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/brand_red</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/brand_red_soft</item>
-        <item name="colorOnPrimaryContainer">@color/brand_red_dark</item>
+        <item name="colorOnPrimary">@color/brand_navy</item>
+        <item name="colorPrimaryContainer">@color/brand_navy_soft</item>
+        <item name="colorOnPrimaryContainer">@color/accent_yellow</item>
         <item name="colorSecondary">@color/brand_red_dark</item>
-        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondary">@color/brand_navy</item>
+        <item name="colorSecondaryContainer">@color/brand_navy_soft</item>
+        <item name="colorOnSecondaryContainer">@color/text_primary</item>
         <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/bg_app</item>
+        <item name="colorSurfaceContainerLow">@color/surface</item>
+        <item name="colorSurfaceContainer">@color/surface</item>
+        <item name="colorSurfaceContainerHigh">@color/surface</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_alt</item>
+        <item name="colorOutline">@color/stroke</item>
         <item name="colorError">@color/error</item>
+        <item name="android:colorBackground">@color/bg_app</item>
         <item name="android:windowBackground">@color/bg_app</item>
-        <item name="android:statusBarColor">@color/brand_red_dark</item>
+        <item name="android:statusBarColor">@color/brand_navy_dark</item>
         <item name="android:navigationBarColor">@color/bg_app</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
         <item name="android:layoutDirection">rtl</item>
         <item name="android:textDirection">rtl</item>
     </style>

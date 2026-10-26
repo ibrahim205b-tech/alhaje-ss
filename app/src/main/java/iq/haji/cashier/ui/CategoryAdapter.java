@@ -62,7 +62,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
         h.text.setText(c.name);
         h.text.setSelected(sel);
         h.text.setTextColor(ContextCompat.getColor(h.text.getContext(),
-                sel ? R.color.white : R.color.text_primary));
+                sel ? R.color.brand_navy : R.color.text_primary));
     }
 
     @Override

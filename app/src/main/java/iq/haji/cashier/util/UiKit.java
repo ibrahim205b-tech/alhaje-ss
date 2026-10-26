@@ -36,7 +36,7 @@ public final class UiKit {
 
     public static void setChip(TextView t, boolean selected) {
         t.setSelected(selected);
-        t.setTextColor(ContextCompat.getColor(t.getContext(), selected ? R.color.white : R.color.text_primary));
+        t.setTextColor(ContextCompat.getColor(t.getContext(), selected ? R.color.brand_navy : R.color.text_primary));
     }
 
     public static void select(TextView[] chips, int idx) {

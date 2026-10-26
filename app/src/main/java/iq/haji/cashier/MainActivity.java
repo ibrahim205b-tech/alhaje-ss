@@ -1602,7 +1602,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             typeViews[i].setSelected(selected);
             typeViews[i].setTextColor(ContextCompat.getColor(
                     this,
-                    selected ? R.color.white : R.color.text_primary));
+                    selected ? R.color.brand_navy : R.color.text_primary));
         }
 
         if (isLocked) {
@@ -1706,7 +1706,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             b.setTextSize(14);
             b.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             b.setGravity(Gravity.CENTER);
-            b.setBackgroundResource(R.drawable.bg_badge);
+            b.setBackgroundResource(R.drawable.bg_button_primary);
             b.setTextColor(ContextCompat.getColor(this, R.color.brand_navy));
             b.setPadding(Ui.dp(this, 14), 0, Ui.dp(this, 14), 0);
             b.setOnClickListener(v -> showAssignDialog(name));
