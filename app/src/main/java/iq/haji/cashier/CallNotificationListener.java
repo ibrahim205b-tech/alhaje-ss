@@ -60,7 +60,8 @@ public class CallNotificationListener extends NotificationListenerService {
                 String digits = number.replace("+", "");
                 if (digits.length() < 7 || digits.length() > 15) continue;
 
-                CallNumberStore.save(this, number);
+                // إشعار المكالمة يظهر أثناء الرنين، فيبقى الرقم معلقاً حتى الرد.
+                CallNumberStore.saveRinging(this, number);
                 return;
             }
         }

@@ -128,6 +128,17 @@
 
         </service>
 
+        <!-- يُدخل رقم المتصل في الطلب عند الرد على المكالمة فقط -->
+        <receiver
+            android:name=".PhoneStateReceiver"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+
+        </receiver>
+
         <!-- خدمة التقاط رقم المتصل دون استبدال واجهة الاتصال -->
         <service
             android:name=".CallerScreeningService"

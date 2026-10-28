@@ -104,6 +104,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     };
 
     private static final int REQUEST_CALL_SCREENING_ROLE = 7401;
+    private static final int REQUEST_PHONE_STATE = 7402;
 
     private TextView chipShift, chipPrinter, tvOrderNo, tvOrderTime,
             tvLockedBanner, tvDetailsSummary;
@@ -134,8 +135,18 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         setupLists();
         setupActions();
         loadInitialOrder();
+        requestPhoneStatePermission();
 
         animateEntrance();
+    }
+
+    /** إذن حالة الهاتف ضروري لمعرفة لحظة الرد على المكالمة وإدخال رقم المتصل. */
+    private void requestPhoneStatePermission() {
+        if (checkSelfPermission(android.Manifest.permission.READ_PHONE_STATE)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.READ_PHONE_STATE},
+                    REQUEST_PHONE_STATE);
+        }
     }
 
     private void animateEntrance() {
@@ -625,6 +636,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void requestCallerScreeningRole() {
+        requestPhoneStatePermission();
+
         RoleManager roleManager = getSystemService(RoleManager.class);
 
         if (roleManager == null

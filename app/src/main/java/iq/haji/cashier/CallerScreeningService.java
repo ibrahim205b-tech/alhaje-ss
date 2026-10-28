@@ -25,7 +25,8 @@ public class CallerScreeningService extends CallScreeningService {
                 String number = handle.getSchemeSpecificPart();
 
                 if (number != null && !number.trim().isEmpty()) {
-                    CallNumberStore.save(this, number.trim());
+                    // يُحفظ الرقم معلقاً، ولا يدخل الطلب إلا بعد الرد على المكالمة.
+                    CallNumberStore.saveRinging(this, number.trim());
                 }
             }
         } finally {
