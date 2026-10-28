@@ -94,7 +94,7 @@ public class DriverReportPrinter {
                     if (sb.length() > 0) {
                         sb.append("   ");
                     }
-                    sb.append('#').append(o.id);
+                    sb.append('#').append(o.displayNo());
                 }
                 s.right(sb.toString(), 0.85f, false);
             }
@@ -150,7 +150,7 @@ public class DriverReportPrinter {
             if (i++ > 0) {
                 s.dashed();
             }
-            s.row(new String[]{"#" + o.id, Fmt.time(o.createdAt), Fmt.number(o.total), Fmt.number(o.deliveryFee)},
+            s.row(new String[]{"#" + o.displayNo(), Fmt.time(o.createdAt), Fmt.number(o.total), Fmt.number(o.deliveryFee)},
                     0.9f, false);
             total += o.total;
             fees += o.deliveryFee;

@@ -6,6 +6,8 @@ import java.util.List;
 public class Order {
     /** رقم الطلب المتسلسل: يُمنح من قاعدة البيانات (AUTOINCREMENT) ولا يتكرر أبداً. 0 = لم يُحفظ بعد. */
     public long id;
+    /** رقم الفاتورة الظاهر للزبون: يبدأ من 1 في كل وردية. 0 = لم يُحفظ بعد. */
+    public long no;
     public String uuid;
     public long createdAt;
     public long shiftId;
@@ -43,5 +45,10 @@ public class Order {
         int c = 0;
         for (OrderLine l : lines) c += l.qty;
         return c;
+    }
+
+    /** الرقم المطبوع والمعروض للفاتورة. */
+    public long displayNo() {
+        return no > 0 ? no : id;
     }
 }

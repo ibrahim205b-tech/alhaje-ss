@@ -37,7 +37,7 @@ public class ShiftActivity extends PageActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setPageTitle("إدارة الورديات");
+        setPageTitle("الوردية");
         repo = new ShiftRepository(this);
         st = new AppSettings(this);
 
@@ -66,7 +66,12 @@ public class ShiftActivity extends PageActivity {
 
     private void render() {
         left.removeAllViews();
-        Shift open = repo.getOpenShift();
+        Shift open;
+        try {
+            open = repo.ensureOpenShift();
+        } catch (AppException e) {
+            open = null;
+        }
         if (open == null) buildStart();
         else buildOpen(open);
 
@@ -121,7 +126,7 @@ public class ShiftActivity extends PageActivity {
         final long expected = s.openingCash + sum.salesTotal;
 
         LinearLayout c = UiKit.card(this);
-        c.addView(UiKit.title(this, "الوردية #" + s.id + " — مفتوحة"));
+        c.addView(UiKit.title(this, "الوردية الحالية — مفتوحة"));
         c.addView(UiKit.kv(this, "الموظف", s.cashierName, false), UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
         c.addView(UiKit.kv(this, "بدأت", Fmt.dateTime(s.startedAt), false));
         c.addView(UiKit.kv(this, "افتتاح الصندوق", Fmt.money(s.openingCash), false));
@@ -169,9 +174,10 @@ public class ShiftActivity extends PageActivity {
         long diff = cash - expected;
         String msg = "المتوقع: " + Fmt.money(expected) + "\nالفعلي: " + Fmt.money(cash)
                 + "\nالفرق: " + (diff > 0 ? "+" : "") + Fmt.money(diff)
-                + "\n\nبعد الإغلاق لا يمكن تعديل طلبات الوردية، ويُحفظ تقريرها. لا تُحذف أي بيانات. هل تريد الإغلاق؟";
+                + "\n\nبعد الإغلاق يُحفظ تقرير الوردية، ثم تبدأ وردية جديدة فوراً من الصفر"
+                + " ويعود رقم الفاتورة إلى #1. هل تريد الإغلاق؟";
         AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("تأكيد إغلاق الوردية #" + s.id)
+                .setTitle("تأكيد إغلاق الوردية")
                 .setMessage(msg)
                 .setPositiveButton("تأكيد الإغلاق", (x, w) -> PinDialog.require(this, () -> doClose(s.id, cash, note)))
                 .setNegativeButton(R.string.back, null)
@@ -182,6 +188,7 @@ public class ShiftActivity extends PageActivity {
     private void doClose(long id, long cash, String note) {
         try {
             Shift closed = repo.closeShift(id, cash, note);
+            Ui.toast(this, "أُغلقت الوردية وبدأت وردية جديدة — الفاتورة التالية #1");
             render();
             ShiftReportDialog.show(this, closed.id);
         } catch (AppException e) {

@@ -14,7 +14,10 @@ import iq.haji.cashier.model.Shift;
 import iq.haji.cashier.util.AppException;
 import iq.haji.cashier.util.Fmt;
 
-/** الورديات: كل وردية مستقلة، وتقرير الإغلاق يُحفظ ثابتاً ولا يُصفَّر شيء من الطلبات. */
+/**
+ * وردية واحدة مفتوحة دائماً. عند إغلاقها يُحفظ تقريرها وتبدأ فوراً وردية جديدة من الصفر
+ * (حسابات صفرية، ورقم الفاتورة يعود إلى #1). الطلبات القديمة تبقى محفوظة للتقارير.
+ */
 public class ShiftRepository {
     private static final String COLS = "id,started_at,ended_at,cashier_name,opening_cash,closing_cash,"
             + "closing_note,closed,orders_count,cancelled_count,sales_total,discounts_total,delivery_total";
@@ -73,9 +76,13 @@ public class ShiftRepository {
     }
 
     public long requireOpenShiftId() {
+        return ensureOpenShift().id;
+    }
+
+    /** يعيد الوردية المفتوحة، ويفتح واحدة جديدة تلقائياً إن لم توجد. */
+    public Shift ensureOpenShift() {
         Shift s = getOpenShift();
-        if (s == null) throw new AppException("لا توجد وردية مفتوحة. ابدأ وردية من شاشة الورديات أولاً.");
-        return s.id;
+        return s != null ? s : startShift(null, 0);
     }
 
     public Shift startShift(String cashierName, long openingCash) {
@@ -142,6 +149,9 @@ public class ShiftRepository {
 
             AuditLog.log(db, "SHIFT_CLOSE", "#" + shiftId + " مبيعات " + Fmt.number(sum.salesTotal)
                     + " طلبات " + sum.ordersCount);
+
+            // تبدأ الوردية الجديدة مباشرة من الصفر بنفس اسم الموظف.
+            startShift(s.cashierName, 0);
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();

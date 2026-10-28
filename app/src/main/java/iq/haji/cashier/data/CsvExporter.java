@@ -97,7 +97,7 @@ public final class CsvExporter {
             items.append(l.name).append(" x").append(l.qty);
         }
         row(w,
-                String.valueOf(o.id),
+                String.valueOf(o.displayNo()),
                 cell(Fmt.date(o.createdAt)),
                 cell(Fmt.time(o.createdAt)),
                 String.valueOf(o.shiftId),

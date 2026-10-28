@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "alhaje_ss.db";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     private static DatabaseHelper instance;
 
@@ -98,8 +98,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "print_count INTEGER NOT NULL DEFAULT 0,"
                 + "printed_at INTEGER NOT NULL DEFAULT 0,"
                 + "cashier_name TEXT,"
+                + "shift_seq INTEGER NOT NULL DEFAULT 0,"
                 + "FOREIGN KEY(shift_id) REFERENCES shifts(id))");
         db.execSQL("CREATE INDEX idx_orders_shift ON orders(shift_id)");
+        db.execSQL("CREATE UNIQUE INDEX idx_orders_shift_seq ON orders(shift_id, shift_seq)");
         db.execSQL("CREATE INDEX idx_orders_created ON orders(created_at)");
         db.execSQL("CREATE INDEX idx_orders_status ON orders(status)");
 
@@ -142,6 +144,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             // الإصدار 2: رقم واتساب الزبون يُكتب يدوياً بجانب رقم المتصل.
             db.execSQL("ALTER TABLE orders ADD COLUMN whatsapp TEXT");
+        }
+        if (oldVersion < 3) {
+            // الإصدار 3: رقم الفاتورة يبدأ من 1 في كل وردية.
+            // الطلبات القديمة تُرقَّم حسب ترتيبها داخل ورديتها.
+            db.execSQL("ALTER TABLE orders ADD COLUMN shift_seq INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("UPDATE orders SET shift_seq=(SELECT COUNT(*) FROM orders o2 "
+                    + "WHERE o2.shift_id=orders.shift_id AND o2.id<=orders.id)");
+            db.execSQL("CREATE UNIQUE INDEX idx_orders_shift_seq ON orders(shift_id, shift_seq)");
         }
     }
 

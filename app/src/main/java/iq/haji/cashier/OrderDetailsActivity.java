@@ -66,7 +66,7 @@ public class OrderDetailsActivity extends PageActivity {
 
         // ---- معلومات الطلب ----
         LinearLayout info = UiKit.card(this);
-        info.addView(UiKit.title(this, "الطلب رقم " + o.id));
+        info.addView(UiKit.title(this, "الطلب رقم #" + o.displayNo()));
         info.addView(UiKit.kv(this, "الحالة", OrderStatus.label(o.status), false));
         info.addView(UiKit.kv(this, "النوع", OrderType.label(o.type), false));
         info.addView(UiKit.kv(this, "التاريخ والوقت", Fmt.dateTime(o.createdAt), false));
@@ -178,7 +178,7 @@ public class OrderDetailsActivity extends PageActivity {
         }
         AlertDialog d = new AlertDialog.Builder(this)
                 .setTitle("إعادة طباعة")
-                .setMessage("سيُطبع نسخة إضافية من الفاتورة رقم " + o.id + " (لن تُنشأ فاتورة جديدة).")
+                .setMessage("سيُطبع نسخة إضافية من الفاتورة رقم #" + o.displayNo() + " (لن تُنشأ فاتورة جديدة).")
                 .setPositiveButton("طباعة", (x, w) -> doPrint())
                 .setNegativeButton(R.string.cancel, null)
                 .create();
@@ -199,7 +199,7 @@ public class OrderDetailsActivity extends PageActivity {
     private void onCancel(final Order o) {
         final EditText reason = Ui.editText(this, "سبب الإلغاء (اختياري)", InputType.TYPE_CLASS_TEXT, "");
         AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("إلغاء الطلب رقم " + o.id)
+                .setTitle("إلغاء الطلب رقم #" + o.displayNo())
                 .setMessage("يبقى الطلب في السجل بحالة «ملغى» ولا يُحتسب في المبيعات.")
                 .setView(Ui.wrap(this, reason))
                 .setPositiveButton("إلغاء الطلب", (x, w) -> {

@@ -123,11 +123,11 @@ public class DailySalesReportRepository {
         Map<String, DriverSale> byDriver = new LinkedHashMap<>();
 
         String driverSql =
-                "SELECT TRIM(driver), id FROM orders " +
+                "SELECT TRIM(driver), CASE WHEN shift_seq>0 THEN shift_seq ELSE id END FROM orders " +
                 "WHERE created_at>=? AND created_at<? " +
                 "AND status IN " + SALE_STATUSES +
                 " AND driver IS NOT NULL AND TRIM(driver)<>'' " +
-                "ORDER BY TRIM(driver), id";
+                "ORDER BY TRIM(driver), created_at";
 
         try (Cursor c = db().rawQuery(driverSql, new String[]{
                 String.valueOf(from), String.valueOf(toExclusive)})) {

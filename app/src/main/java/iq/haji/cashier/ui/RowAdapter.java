@@ -125,7 +125,7 @@ public class RowAdapter extends RecyclerView.Adapter<RowAdapter.VH> {
         StringBuilder sub = new StringBuilder(Fmt.dateTime(o.createdAt));
         if (o.customerName != null && !o.customerName.isEmpty()) sub.append("  •  ").append(o.customerName);
         else if (o.phone != null && !o.phone.isEmpty()) sub.append("  •  ").append(o.phone);
-        Row r = new Row("#" + o.id + "  •  " + OrderType.label(o.type), sub.toString(),
+        Row r = new Row("#" + o.displayNo() + "  •  " + OrderType.label(o.type), sub.toString(),
                 Fmt.money(o.total), Long.valueOf(o.id));
         r.badge(OrderStatus.label(o.status), OrderStatus.colorRes(o.status));
         return r;

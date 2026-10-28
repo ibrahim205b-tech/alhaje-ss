@@ -220,7 +220,7 @@ public class DriversActivity extends PageActivity {
             LinearLayout row = UiKit.row(this);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(0, Ui.dp(this, 6), 0, Ui.dp(this, 6));
-            TextView no = UiKit.text(this, "فاتورة #" + o.id, 18, R.color.text_primary, true);
+            TextView no = UiKit.text(this, "فاتورة #" + o.displayNo(), 18, R.color.text_primary, true);
             no.setOnClickListener(v -> showReceipt(o.id));
             row.addView(no, new LinearLayout.LayoutParams(0, UiKit.WRAP, 1f));
             unassignedBox.addView(row);
@@ -253,7 +253,7 @@ public class DriversActivity extends PageActivity {
         for (final Order o : list) {
             LinearLayout row = UiKit.row(this);
             row.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
-            row.addView(UiKit.text(this, "فاتورة #" + o.id, 17, R.color.text_primary, true),
+            row.addView(UiKit.text(this, "فاتورة #" + o.displayNo(), 17, R.color.text_primary, true),
                     new LinearLayout.LayoutParams(0, UiKit.WRAP, 1f));
             row.addView(UiKit.text(this, Fmt.time(o.createdAt) + "   " + Fmt.money(o.total), 14, R.color.text_secondary, false));
             row.setOnClickListener(v -> showReceipt(o.id));
@@ -296,7 +296,7 @@ public class DriversActivity extends PageActivity {
             return;
         }
         AlertDialog d = new AlertDialog.Builder(this)
-                .setTitle("فاتورة #" + o.id)
+                .setTitle("فاتورة #" + o.displayNo())
                 .setMessage("إلغاء نسب هذا الطلب إلى " + o.driver + "؟ سيعود إلى «طلبات بلا سائق».")
                 .setPositiveButton("إلغاء النسب", (x, w) -> {
                     try {

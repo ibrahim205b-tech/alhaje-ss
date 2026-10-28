@@ -140,7 +140,7 @@ public class ReceiptRenderer {
 
         // رقم الفاتورة واضح في منتصف الوصل
         s.space(2);
-        s.center("#" + o.id, base * 1.35f, true);
+        s.center("#" + o.displayNo(), base * 1.35f, true);
 
         // التاريخ مباشرة تحت رقم الفاتورة
         s.center(

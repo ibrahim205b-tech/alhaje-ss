@@ -183,6 +183,13 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     protected void onResume() {
         super.onResume();
 
+        // وردية واحدة مفتوحة دائماً: تُفتح تلقائياً إن لم توجد.
+        try {
+            shifts.ensureOpenShift();
+        } catch (RuntimeException ignored) {
+            // تبقى رسالة «لا توجد وردية» عند الطباعة إن تعذر الفتح.
+        }
+
         syncCurrentWithDb();
         applyPendingCallerNumber();
         reloadCatalog();
@@ -1603,7 +1610,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         boolean delivery = OrderType.DELIVERY.equals(current.type);
 
         tvOrderNo.setText("فاتورة رقم #"
-                + (isLocked ? current.id : orders.nextOrderNumber()));
+                + (isLocked ? current.displayNo() : orders.nextOrderNumber()));
         tvOrderTime.setText(Fmt.dateTime(current.createdAt));
 
         for (int i = 0; i < typeViews.length; i++) {
@@ -1754,7 +1761,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
         final List<String> labels = new ArrayList<>();
         for (Order o : list) {
-            labels.add("فاتورة #" + o.id + "    " + Fmt.time(o.createdAt) + "    " + Fmt.money(o.total));
+            labels.add("فاتورة #" + o.displayNo() + "    " + Fmt.time(o.createdAt) + "    " + Fmt.money(o.total));
         }
         final android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
                 this, android.R.layout.simple_list_item_1, labels);
@@ -1769,7 +1776,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             Order o = list.get(pos);
             try {
                 orders.updateDriver(o.id, driver);
-                Ui.toast(this, "نُسبت الفاتورة #" + o.id + " إلى " + driver);
+                Ui.toast(this, "نُسبت الفاتورة #" + o.displayNo() + " إلى " + driver);
                 list.remove(pos);
                 labels.remove(pos);
                 adapter.notifyDataSetChanged();
@@ -1791,7 +1798,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             chipShift.setTextColor(ContextCompat.getColor(
                     this, R.color.error));
         } else {
-            chipShift.setText("الوردية #" + shift.id + " مفتوحة");
+            chipShift.setText("الوردية مفتوحة منذ " + Fmt.time(shift.startedAt));
             chipShift.setTextColor(ContextCompat.getColor(
                     this, R.color.success));
         }

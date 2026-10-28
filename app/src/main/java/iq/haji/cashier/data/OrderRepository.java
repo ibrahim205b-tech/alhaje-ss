@@ -29,7 +29,7 @@ public class OrderRepository {
     private static final String DRAFT_KEY = "draft_order";
     private static final String ORDER_COLS = "id,uuid,created_at,shift_id,type,status,customer_name,phone,"
             + "address,driver,notes,payment_method,delivery_fee,discount,subtotal,total,print_count,"
-            + "printed_at,cashier_name,whatsapp";
+            + "printed_at,cashier_name,whatsapp,shift_seq";
 
     private final Context ctx;
     private final AppSettings settings;
@@ -45,10 +45,16 @@ public class OrderRepository {
 
     // ---------------- رقم الطلب القادم ----------------
 
-    /** للعرض فقط: الرقم الذي سيُمنح عند الحفظ. */
+    /** للعرض فقط: رقم الفاتورة التالية في الوردية المفتوحة (يبدأ من 1 بعد كل إغلاق). */
     public long nextOrderNumber() {
-        try (Cursor c = db().rawQuery("SELECT seq FROM sqlite_sequence WHERE name='orders'", null)) {
-            if (c.moveToFirst()) return c.getLong(0) + 1;
+        Shift open = new ShiftRepository(ctx).getOpenShift();
+        return open == null ? 1 : nextShiftSeq(db(), open.id);
+    }
+
+    private static long nextShiftSeq(SQLiteDatabase db, long shiftId) {
+        try (Cursor c = db.rawQuery("SELECT COALESCE(MAX(shift_seq),0)+1 FROM orders WHERE shift_id=?",
+                new String[]{String.valueOf(shiftId)})) {
+            if (c.moveToFirst()) return c.getLong(0);
         }
         return 1;
     }
@@ -197,6 +203,8 @@ public class OrderRepository {
             cv.put("printed_at", 0);
             cv.put("cashier_name", cashier);
             cv.put("whatsapp", nz(o.whatsapp));
+            long seq = nextShiftSeq(db, shiftId);
+            cv.put("shift_seq", seq);
             newId = db.insert("orders", null, cv);
             if (newId < 0) throw new AppException("تعذر حفظ الطلب");
 
@@ -218,6 +226,7 @@ public class OrderRepository {
             db.setTransactionSuccessful();
 
             o.id = newId;
+            o.no = seq;
             o.uuid = uuid;
             o.createdAt = now;
             o.shiftId = shiftId;
@@ -266,6 +275,7 @@ public class OrderRepository {
         o.printedAt = c.getLong(17);
         o.cashierName = c.getString(18);
         o.whatsapp = c.isNull(19) ? "" : c.getString(19);
+        o.no = c.getLong(20);
         return o;
     }
 
