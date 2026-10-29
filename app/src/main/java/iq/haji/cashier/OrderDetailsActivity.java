@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import java.util.List;
 
+import iq.haji.cashier.data.AdminGuard;
 import iq.haji.cashier.data.OrderRepository;
 import iq.haji.cashier.data.ShiftRepository;
 import iq.haji.cashier.model.Order;
@@ -41,7 +42,7 @@ public class OrderDetailsActivity extends PageActivity {
             return;
         }
         repo = new OrderRepository(this);
-        setPageTitle("تفاصيل الطلب رقم " + orderId);
+        setPageTitle("تفاصيل الطلب");
         LinearLayout h = UiKit.row(this);
         content.addView(h, new android.widget.FrameLayout.LayoutParams(UiKit.MATCH, UiKit.MATCH));
         left = UiKit.column(this, h, 5, false);
@@ -114,6 +115,11 @@ public class OrderDetailsActivity extends PageActivity {
             if (pendingPrint) {
                 act.addView(UiKit.hint(this, "الطلب محفوظ ولم تتأكد طباعته بعد. لن تُنشأ فاتورة جديدة عند الإعادة."));
             }
+        }
+        if (shiftOpen && !cancelled && !pendingPrint) {
+            TextView e = UiKit.button(this, "✎ تعديل الطلب (رمز المدير)", false);
+            e.setOnClickListener(v -> onEdit());
+            act.addView(e, UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
         }
         if (shiftOpen) {
             if (OrderRepository.canChange(o.status, OrderStatus.READY)) {
@@ -193,6 +199,24 @@ public class OrderDetailsActivity extends PageActivity {
             if (isFinishing() || isDestroyed()) return;
             render();
             msg(r.success ? "تم الإرسال" : "لم تتم الطباعة", r.message);
+        });
+    }
+
+    /** يفتح الطلب في شاشة الكاشير للتعديل بعد إدخال رمز المدير. */
+    private void onEdit() {
+        if (!new AdminGuard(this).isEnabled()) {
+            msg("رمز المدير غير مُعيّن",
+                    "تعديل الطلبات المطبوعة يحتاج رمز المدير. عيّن الرمز من الإعدادات أولاً ثم أعد المحاولة.");
+            return;
+        }
+        PinDialog.require(this, () -> {
+            android.content.Intent i = new android.content.Intent(this, MainActivity.class);
+            i.setAction(MainActivity.ACTION_EDIT_ORDER);
+            i.putExtra("order_id", orderId);
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
         });
     }
 

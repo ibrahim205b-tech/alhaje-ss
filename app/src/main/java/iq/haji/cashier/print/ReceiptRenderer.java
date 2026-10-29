@@ -238,7 +238,13 @@ public class ReceiptRenderer {
             s.center(footer, base, true);
         }
 
-        if (o.printCount > 0) {
+        if (o.edited) {
+            s.center(
+                    "(فاتورة معدّلة)",
+                    base * 0.8f,
+                    false
+            );
+        } else if (o.printCount > 0) {
             s.center(
                     "(نسخة معاد طباعتها)",
                     base * 0.8f,

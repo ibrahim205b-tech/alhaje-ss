@@ -8,6 +8,8 @@ public class Order {
     public long id;
     /** رقم الفاتورة الظاهر للزبون: يبدأ من 1 في كل وردية. 0 = لم يُحفظ بعد. */
     public long no;
+    /** عُدّل بعد طباعته بإذن المدير. */
+    public boolean edited;
     public String uuid;
     public long createdAt;
     public long shiftId;

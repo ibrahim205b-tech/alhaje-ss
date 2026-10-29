@@ -73,6 +73,25 @@ public class ReceiptPrinter {
         }, cb);
     }
 
+    /** حفظ تعديل طلب مطبوع (بإذن المدير) ثم طباعة الفاتورة المعدلة بنفس الرقم. */
+    public void printEdited(final Order o, final long orderId, final Callback cb) {
+        submit(new Job() {
+            @Override
+            public Result run() {
+                OrderRepository repo = new OrderRepository(ctx);
+                try {
+                    repo.updateOrderForPrint(orderId, o);
+                } catch (AppException e) {
+                    // لم يُحفظ التعديل؛ يبقى في شاشة الكاشير ليُصحَّح.
+                    return fail(orderId, false, e.getMessage());
+                }
+                Order saved = repo.getOrder(orderId);
+                if (saved == null) return fail(orderId, false, "تعذر قراءة الطلب بعد تعديله");
+                return sendSaved(repo, saved);
+            }
+        }, cb);
+    }
+
     /** إعادة طباعة/إعادة محاولة لطلب محفوظ (من شاشة الطلبات أو تفاصيل الطلب). */
     public void reprint(final long orderId, final Callback cb) {
         submit(new Job() {
@@ -116,7 +135,7 @@ public class ReceiptPrinter {
     private Result sendSaved(OrderRepository repo, Order saved) {
         long id = saved.id;
         if (OrderStatus.CANCELLED.equals(saved.status)) {
-            return fail(id, true, "الطلب رقم " + id + " ملغى ولا يمكن طباعته");
+            return fail(id, true, "الطلب رقم #" + saved.displayNo() + " ملغى ولا يمكن طباعته");
         }
         AppSettings st = new AppSettings(ctx);
         PrinterManager pm = PrinterManager.get(ctx);
@@ -129,10 +148,10 @@ public class ReceiptPrinter {
         } catch (PrintException e) {
             repo.recordPrintFailure(id, e.getMessage());
             return fail(id, true, "فشلت الطباعة: " + e.getMessage()
-                    + "\nالطلب رقم " + id + " محفوظ بكامل محتوياته. اضغط «إعادة المحاولة» بعد إصلاح المشكلة.");
+                    + "\nالطلب رقم #" + saved.displayNo() + " محفوظ بكامل محتوياته. اضغط «إعادة المحاولة» بعد إصلاح المشكلة.");
         } catch (RuntimeException e) {
             repo.recordPrintFailure(id, String.valueOf(e.getMessage()));
-            return fail(id, true, "خطأ غير متوقع أثناء الطباعة. الطلب رقم " + id
+            return fail(id, true, "خطأ غير متوقع أثناء الطباعة. الطلب رقم #" + saved.displayNo()
                     + " محفوظ، ويمكنك إعادة المحاولة.");
         } finally {
             if (bmp != null) bmp.recycle();
@@ -144,9 +163,9 @@ public class ReceiptPrinter {
         r.orderId = id;
         try {
             repo.markPrinted(id);
-            r.message = "تم إرسال الفاتورة رقم " + id + " إلى الطابعة.\n" + PrinterManager.DELIVERY_NOTE;
+            r.message = "تم إرسال الفاتورة رقم #" + saved.displayNo() + " إلى الطابعة.\n" + PrinterManager.DELIVERY_NOTE;
         } catch (RuntimeException e) {
-            r.message = "طُبعت الفاتورة رقم " + id + " لكن تعذر تحديث حالتها. افتح الطلب من شاشة الطلبات "
+            r.message = "طُبعت الفاتورة رقم #" + saved.displayNo() + " لكن تعذر تحديث حالتها. افتح الطلب من شاشة الطلبات "
                     + "ولا تعد الطباعة حتى لا تتكرر الفاتورة.";
         }
         return r;

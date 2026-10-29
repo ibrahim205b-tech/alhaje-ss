@@ -120,6 +120,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     private CategoryAdapter categoryAdapter;
     private OrderLineAdapter lineAdapter;
 
+    public static final String ACTION_EDIT_ORDER = "iq.haji.cashier.EDIT_ORDER";
+    private static final String EDIT_PREFS = "haji_edit";
+    /** رقم الطلب المطبوع الذي يُعدَّل الآن (0 = طلب جديد عادي). */
+    private long editingOrderId;
+    private long editingNo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,6 +141,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         setupLists();
         setupActions();
         loadInitialOrder();
+        handleEditIntent(getIntent());
         requestPhoneStatePermission();
 
         animateEntrance();
@@ -230,7 +237,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         // لا نعلّم المكالمة كمعالجة أثناء وجود طلب محفوظ أو طباعة جارية،
         // ويبقى الرقم معلقاً حتى يصبح الطلب الجديد جاهزاً.
-        if (current == null || current.id != 0 || printing) {
+        if (current == null || current.id != 0 || editingOrderId != 0 || printing) {
             return;
         }
 
@@ -257,7 +264,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         // لا نغيّر طلباً محفوظاً أو قيد الطباعة.
         // نحتفظ بالرقم حتى يصبح الطلب الجديد جاهزاً.
-        if (current == null || current.id != 0 || printing) {
+        if (current == null || current.id != 0 || editingOrderId != 0 || printing) {
             CallNumberStore.save(this, normalizedPhone);
             return;
         }
@@ -287,8 +294,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
-        // لا نستهلك الرقم إذا كان الطلب محفوظاً أو الطباعة جارية.
-        if (current == null || current.id != 0 || printing) {
+        // لا نستهلك الرقم إذا كان الطلب محفوظاً أو قيد التعديل أو الطباعة جارية.
+        if (current == null || current.id != 0 || editingOrderId != 0 || printing) {
             return;
         }
 
@@ -314,6 +321,90 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 refreshOrderUi();
             }
         }
+
+        handleEditIntent(intent);
+    }
+
+    // ---------------- تعديل طلب مطبوع ----------------
+
+    /** تفتح شاشة تفاصيل الطلب هذه الشاشة بعد التحقق من رمز المدير. */
+    private void handleEditIntent(Intent intent) {
+        if (intent == null || !ACTION_EDIT_ORDER.equals(intent.getAction())) {
+            return;
+        }
+        final long id = intent.getLongExtra("order_id", 0);
+        intent.setAction(null); // لا يُعاد تنفيذه عند تدوير الشاشة
+        if (id == 0) {
+            return;
+        }
+        if (printing) {
+            Ui.toast(this, "انتظر انتهاء الطباعة ثم أعد المحاولة");
+            return;
+        }
+        if (locked()) {
+            Ui.toast(this, "يوجد طلب بانتظار الطباعة. اطبعه أو ألغِه أولاً ثم عدّل الطلب.");
+            return;
+        }
+        if (editingOrderId == id) {
+            return;
+        }
+        if (!current.lines.isEmpty()) {
+            confirm("تعديل الطلب",
+                    "الطلب الجاري غير المطبوع سيُحذف لفتح الطلب المطلوب تعديله. متابعة؟",
+                    "متابعة",
+                    () -> startEditing(id));
+            return;
+        }
+        startEditing(id);
+    }
+
+    private void startEditing(long id) {
+        Order o = orders.getOrder(id);
+        if (o == null || OrderStatus.CANCELLED.equals(o.status)) {
+            Ui.toast(this, "لا يمكن تعديل هذا الطلب");
+            return;
+        }
+        Shift s = shifts.getShift(o.shiftId);
+        if (s == null || s.closed) {
+            Ui.toast(this, "وردية هذا الطلب مغلقة، لا يمكن تعديله");
+            return;
+        }
+        clearStoredCallerNumber();
+        editingOrderId = o.id;
+        editingNo = o.displayNo();
+        getSharedPreferences(EDIT_PREFS, MODE_PRIVATE).edit()
+                .putLong("order_id", editingOrderId)
+                .putLong("no", editingNo)
+                .apply();
+        // نسخة قابلة للتحرير: id = 0 حتى تعمل أدوات الكاشير كطلب عادي، ويُحفظ على الرقم الأصلي.
+        o.id = 0;
+        o.status = OrderStatus.NEW;
+        current = o;
+        persist();
+        Ui.toast(this, "تعديل الفاتورة #" + editingNo + " — عدّل ثم اضغط «حفظ التعديل وطباعة»");
+    }
+
+    private void clearEditing() {
+        editingOrderId = 0;
+        editingNo = 0;
+        getSharedPreferences(EDIT_PREFS, MODE_PRIVATE).edit().clear().apply();
+    }
+
+    /** يستعيد وضع التعديل إذا أُغلق التطبيق أثناءه (المسودة محفوظة). */
+    private void restoreEditing() {
+        android.content.SharedPreferences p = getSharedPreferences(EDIT_PREFS, MODE_PRIVATE);
+        long id = p.getLong("order_id", 0);
+        if (id == 0) {
+            return;
+        }
+        Order o = orders.getOrder(id);
+        Shift s = o == null ? null : shifts.getShift(o.shiftId);
+        if (o == null || OrderStatus.CANCELLED.equals(o.status) || s == null || s.closed) {
+            clearEditing();
+            return;
+        }
+        editingOrderId = id;
+        editingNo = p.getLong("no", o.displayNo());
     }
 
     @Override
@@ -709,6 +800,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         if (draft != null) {
             current = draft;
+            restoreEditing();
 
             if (current.createdAt == 0) {
                 current.createdAt = System.currentTimeMillis();
@@ -717,6 +809,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             normalizeType();
             applyDefaultDelivery();
         } else {
+            clearEditing();
             newOrder();
         }
     }
@@ -747,6 +840,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void resetOrder() {
+        clearEditing();
         orders.clearDraft();
         clearStoredCallerNumber();
         newOrder();
@@ -818,7 +912,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
     }
 
     private void toastLocked() {
-        Ui.toast(this, "الطلب رقم " + current.id
+        Ui.toast(this, "الطلب رقم #" + current.displayNo()
                 + " محفوظ بانتظار الطباعة. أعد المحاولة أو ألغِه.");
     }
 
@@ -1341,6 +1435,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             return;
         }
 
+        if (editingOrderId != 0) {
+            confirmCancelEdit();
+            return;
+        }
+
         if (current.lines.isEmpty()) {
             resetOrder();
             return;
@@ -1359,6 +1458,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         if (!locked()) {
+            if (editingOrderId != 0) {
+                confirmCancelEdit();
+                return;
+            }
+
             if (current.lines.isEmpty()) {
                 Ui.toast(this, "الطلب فارغ");
                 return;
@@ -1389,6 +1493,13 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 .create();
 
         Ui.showRtl(dialog);
+    }
+
+    private void confirmCancelEdit() {
+        confirm("إلغاء التعديل",
+                "تجاهل التعديلات؟ تبقى الفاتورة #" + editingNo + " كما طُبعت سابقاً.",
+                "تجاهل التعديلات",
+                this::resetOrder);
     }
 
     private void doCancelSaved(long id, String reason) {
@@ -1444,7 +1555,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         setBusy(true);
-        printer.printOrder(current, this::onPrintResult);
+        if (editingOrderId != 0) {
+            printer.printEdited(current, editingOrderId, this::onPrintResult);
+        } else {
+            printer.printOrder(current, this::onPrintResult);
+        }
     }
 
     private void setBusy(boolean busy) {
@@ -1457,6 +1572,11 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         if (isFinishing() || isDestroyed()) {
             return;
+        }
+
+        // حُفظ التعديل (طُبع أو صار بانتظار الطباعة): انتهى وضع التعديل.
+        if (result.success || result.orderSaved) {
+            clearEditing();
         }
 
         if (result.success) {
@@ -1610,7 +1730,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         boolean delivery = OrderType.DELIVERY.equals(current.type);
 
         tvOrderNo.setText("فاتورة رقم #"
-                + (isLocked ? current.displayNo() : orders.nextOrderNumber()));
+                + (isLocked ? current.displayNo()
+                : editingOrderId != 0 ? editingNo : orders.nextOrderNumber()));
         tvOrderTime.setText(Fmt.dateTime(current.createdAt));
 
         for (int i = 0; i < typeViews.length; i++) {
@@ -1626,8 +1747,12 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
         }
 
         if (isLocked) {
-            tvLockedBanner.setText("الطلب رقم " + current.id
+            tvLockedBanner.setText("الطلب رقم #" + current.displayNo()
                     + " محفوظ بانتظار الطباعة. اضغط «إعادة المحاولة» أو ألغِ الطلب.");
+            tvLockedBanner.setVisibility(View.VISIBLE);
+        } else if (editingOrderId != 0) {
+            tvLockedBanner.setText("✎ تعديل الفاتورة #" + editingNo
+                    + " — عدّل الأصناف أو البيانات ثم اضغط «حفظ التعديل وطباعة». «طلب جديد» يلغي التعديل.");
             tvLockedBanner.setVisibility(View.VISIBLE);
         } else {
             tvLockedBanner.setVisibility(View.GONE);
@@ -1692,7 +1817,8 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
 
         btnPrint.setText(
                 printing ? "جارٍ الطباعة..."
-                        : (isLocked ? "إعادة المحاولة" : "طباعة الفاتورة"));
+                        : (isLocked ? "إعادة المحاولة"
+                        : editingOrderId != 0 ? "حفظ التعديل وطباعة" : "طباعة الفاتورة"));
 
         btnCancelOrder.setAlpha(printing ? 0.5f : 1f);
         btnNewOrder.setAlpha(printing ? 0.5f : 1f);

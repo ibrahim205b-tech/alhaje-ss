@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "alhaje_ss.db";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     private static DatabaseHelper instance;
 
@@ -99,6 +99,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "printed_at INTEGER NOT NULL DEFAULT 0,"
                 + "cashier_name TEXT,"
                 + "shift_seq INTEGER NOT NULL DEFAULT 0,"
+                + "edited INTEGER NOT NULL DEFAULT 0,"
                 + "FOREIGN KEY(shift_id) REFERENCES shifts(id))");
         db.execSQL("CREATE INDEX idx_orders_shift ON orders(shift_id)");
         db.execSQL("CREATE UNIQUE INDEX idx_orders_shift_seq ON orders(shift_id, shift_seq)");
@@ -152,6 +153,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("UPDATE orders SET shift_seq=(SELECT COUNT(*) FROM orders o2 "
                     + "WHERE o2.shift_id=orders.shift_id AND o2.id<=orders.id)");
             db.execSQL("CREATE UNIQUE INDEX idx_orders_shift_seq ON orders(shift_id, shift_seq)");
+        }
+        if (oldVersion < 4) {
+            // الإصدار 4: علامة الفاتورة المعدّلة بعد طباعتها (بإذن المدير).
+            db.execSQL("ALTER TABLE orders ADD COLUMN edited INTEGER NOT NULL DEFAULT 0");
         }
     }
 

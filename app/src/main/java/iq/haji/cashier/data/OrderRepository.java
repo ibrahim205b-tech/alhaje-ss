@@ -29,7 +29,7 @@ public class OrderRepository {
     private static final String DRAFT_KEY = "draft_order";
     private static final String ORDER_COLS = "id,uuid,created_at,shift_id,type,status,customer_name,phone,"
             + "address,driver,notes,payment_method,delivery_fee,discount,subtotal,total,print_count,"
-            + "printed_at,cashier_name,whatsapp,shift_seq";
+            + "printed_at,cashier_name,whatsapp,shift_seq,edited";
 
     private final Context ctx;
     private final AppSettings settings;
@@ -238,6 +238,63 @@ public class OrderRepository {
         return newId;
     }
 
+    /**
+     * تعديل طلب مطبوع (بعد التحقق من رمز المدير في الواجهة): يستبدل أصنافه وبياناته ومجاميعه
+     * مع الإبقاء على رقمه ووقته ووردية، ويعيده «بانتظار الطباعة» حتى تُطبع النسخة المعدلة.
+     */
+    public long updateOrderForPrint(long orderId, Order o) {
+        validate(o);
+        SQLiteDatabase db = db();
+        db.beginTransaction();
+        try {
+            Order old = getOrder(orderId);
+            if (old == null) throw new AppException("الطلب غير موجود");
+            if (OrderStatus.CANCELLED.equals(old.status)) throw new AppException("الطلب ملغى ولا يمكن تعديله");
+            Shift s = new ShiftRepository(ctx).getShift(old.shiftId);
+            if (s == null || s.closed) throw new AppException("وردية هذا الطلب مغلقة، لا يمكن تعديله");
+
+            ContentValues cv = new ContentValues();
+            cv.put("type", o.type);
+            cv.put("status", OrderStatus.PENDING_PRINT);
+            cv.put("customer_name", nz(o.customerName));
+            cv.put("phone", nz(o.phone));
+            cv.put("whatsapp", nz(o.whatsapp));
+            cv.put("address", nz(o.address));
+            cv.put("driver", nz(o.driver));
+            cv.put("notes", nz(o.notes));
+            cv.put("payment_method", o.paymentMethod == null ? "نقدي" : o.paymentMethod);
+            cv.put("delivery_fee", o.deliveryFee);
+            cv.put("discount", o.discount);
+            cv.put("subtotal", o.subtotal);
+            cv.put("total", o.total);
+            cv.put("edited", 1);
+            if (db.update("orders", cv, "id=?", new String[]{String.valueOf(orderId)}) != 1) {
+                throw new AppException("تعذر حفظ التعديل");
+            }
+
+            db.delete("order_items", "order_id=?", new String[]{String.valueOf(orderId)});
+            for (OrderLine l : o.lines) {
+                ContentValues lc = new ContentValues();
+                lc.put("order_id", orderId);
+                lc.put("product_id", l.productId);
+                lc.put("name", l.name);
+                lc.put("unit_price", l.unitPrice);
+                lc.put("qty", l.qty);
+                lc.put("note", nz(l.note));
+                if (db.insert("order_items", null, lc) < 0) throw new AppException("تعذر حفظ أصناف الطلب");
+            }
+            logStatus(db, orderId, OrderStatus.PENDING_PRINT, "عُدّل الطلب بإذن المدير (الإجمالي كان "
+                    + Fmt.number(old.total) + " وأصبح " + Fmt.number(o.total) + ")");
+            AuditLog.log(db, "ORDER_EDITED", "#" + old.displayNo() + " " + Fmt.number(old.total)
+                    + " ← " + Fmt.number(o.total));
+            db.delete("settings", "key=?", new String[]{DRAFT_KEY});
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return orderId;
+    }
+
     private static String nz(String s) {
         return s == null ? "" : s.trim();
     }
@@ -276,6 +333,7 @@ public class OrderRepository {
         o.cashierName = c.getString(18);
         o.whatsapp = c.isNull(19) ? "" : c.getString(19);
         o.no = c.getLong(20);
+        o.edited = c.getInt(21) == 1;
         return o;
     }
 
