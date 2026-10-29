@@ -248,6 +248,7 @@ public final class PrinterManager {
             }
         }
         transport.flush();
+        drainUntil = System.currentTimeMillis() + Math.min(8000, 800 + data.length / 8);
     }
 
     /**
@@ -255,7 +256,14 @@ public final class PrinterManager {
      * إذا فشل بعد كتابة جزء لا تُعاد تلقائياً (منعاً لطباعة فاتورتين) وتُرمى رسالة توضح ذلك.
      */
     public synchronized void send(byte[] data) throws PrintException {
-        if (transport == null || !transport.isOpen()) connect();
+        // اتصال جديد لكل مهمة: بعد نفاد الورق أو إطفاء الطابعة يبقى الاتصال القديم «مفتوحاً» ظاهرياً
+        // لكن ما يُكتب عليه يضيع بصمت، فيظهر «تم الإرسال» ولا يُطبع شيء.
+        // لا نقطع الاتصال قبل أن تخرج بيانات المهمة السابقة من البلوتوث، وإلا تنقطع الفاتورة السابقة.
+        long wait = drainUntil - System.currentTimeMillis();
+        if (wait > 0) settle(wait);
+        connect();
+        settle(300);
+        preflight();
 
         int[] written = {0};
         try {
@@ -282,6 +290,52 @@ public final class PrinterManager {
                     ? "انقطع الاتصال أثناء إرسال الفاتورة. قد تكون طُبعت جزئياً، تحقق من الورق قبل إعادة المحاولة."
                     : "تعذر الإرسال للطابعة. تأكد أنها تعمل وفيها ورق ثم أعد المحاولة.", second);
         }
+    }
+
+    /** الوقت التقريبي الذي تنتهي فيه البيانات المرسلة من الخروج عبر البلوتوث. */
+    private long drainUntil;
+
+    private static void settle(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * قبل الإرسال: يُخرج الطابعة من حالة الخطأ التي تبقى فيها بعد نفاد الورق ويمسح ما علق في ذاكرتها،
+     * ثم يفحص الورق والغطاء. الطابعات التي لا ترد على الاستعلام تُرسل لها البيانات كالمعتاد.
+     */
+    private void preflight() throws PrintException {
+        PrinterProtocol p = PrinterProtocols.current(settings);
+        try {
+            transport.drain();
+            byte[] recover = p.recoverCommand();
+            if (recover != null) {
+                transport.write(recover, 0, recover.length);
+                transport.flush();
+                settle(150);
+                transport.drain();
+            }
+            String problem = p.blockingProblem(queryStatus(p.coverStatusQuery()), queryStatus(p.paperStatusQuery()));
+            if (problem != null) {
+                setState(State.ERROR, problem);
+                throw new PrintException(problem);
+            }
+        } catch (IOException e) {
+            closeQuietly();
+            setState(State.ERROR, "انقطع الاتصال");
+            throw new PrintException("انقطع الاتصال بالطابعة. تأكد أنها مشغّلة ثم أعد المحاولة.", e);
+        }
+    }
+
+    /** يرسل استعلام حالة ويعيد بايت الرد، أو -1 إذا لم ترد الطابعة. */
+    private int queryStatus(byte[] q) throws IOException {
+        if (q == null) return -1;
+        transport.write(q, 0, q.length);
+        transport.flush();
+        return transport.readByte(800);
     }
 
     /** يعيد وصف حالة الورق أو null إذا لم تستجب الطابعة (لا تدعم الاستعلام). */

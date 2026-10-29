@@ -22,6 +22,34 @@ public class EscPosProtocol implements PrinterProtocol {
         return b.build();
     }
 
+    /** DLE ENQ 2 : الخروج من حالة الخطأ (مثل نفاد الورق) ومسح ذاكرة الاستقبال والطباعة. */
+    @Override
+    public byte[] recoverCommand() {
+        return new byte[]{0x10, 0x05, 0x02};
+    }
+
+    /** DLE EOT 2 : سبب توقف الطابعة (الغطاء، نفاد الورق، خطأ). */
+    @Override
+    public byte[] coverStatusQuery() {
+        return new byte[]{0x10, 0x04, 0x02};
+    }
+
+    /** رد حالة صحيح في ESC/POS: البت 1 و 4 دائماً 1، والبت 0 و 7 دائماً 0. */
+    private static boolean valid(int b) {
+        return b >= 0 && (b & 0x93) == 0x12;
+    }
+
+    @Override
+    public String blockingProblem(int cover, int paper) {
+        if (valid(cover) && (cover & 0x04) != 0) {
+            return "غطاء الطابعة مفتوح. أغلقه جيداً ثم أعد المحاولة.";
+        }
+        if ((valid(paper) && (paper & 0x60) != 0) || (valid(cover) && (cover & 0x20) != 0)) {
+            return "الورق نفد في الطابعة. ضع لفة جديدة وأغلق الغطاء ثم أعد المحاولة.";
+        }
+        return null;
+    }
+
     /** DLE EOT 4 : حالة مستشعر الورق. */
     @Override
     public byte[] paperStatusQuery() {

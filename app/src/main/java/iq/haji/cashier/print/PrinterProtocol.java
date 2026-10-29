@@ -17,4 +17,22 @@ public interface PrinterProtocol {
 
     /** تفسير بايت الاستجابة لحالة الورق. */
     String interpretPaperStatus(int responseByte);
+
+    /** أمر يُخرج الطابعة من حالة الخطأ ويمسح ذاكرتها قبل مهمة جديدة، أو null. */
+    default byte[] recoverCommand() {
+        return null;
+    }
+
+    /** استعلام حالة الغطاء/التوقف، أو null. */
+    default byte[] coverStatusQuery() {
+        return null;
+    }
+
+    /**
+     * وصف مشكلة تمنع الطباعة (ورق نفد، غطاء مفتوح) أو null.
+     * القيمة -1 تعني أن الطابعة لم ترد، فلا تُعد مشكلة.
+     */
+    default String blockingProblem(int coverByte, int paperByte) {
+        return null;
+    }
 }
