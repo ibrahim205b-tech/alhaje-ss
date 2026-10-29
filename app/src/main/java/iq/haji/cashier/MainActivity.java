@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1595,7 +1594,7 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
             }
 
             refreshOrderUi();
-            showSuccess(result.message);
+            // نجاح الطباعة لا يُظهر أي رسالة؛ الفشل فقط يُعرض.
             return;
         }
 
@@ -1629,23 +1628,6 @@ public class MainActivity extends BaseActivity implements PrinterManager.StateLi
                 // يبقى الطلب محفوظاً ويمكن التحقق من حالته لاحقاً.
             }
         }
-    }
-
-    private void showSuccess(String message) {
-        Snackbar snackbar = Snackbar.make(
-                findViewById(R.id.root), message, Snackbar.LENGTH_LONG);
-
-        snackbar.setDuration(9000);
-        snackbar.setAction(R.string.ok, v -> {});
-
-        View text = snackbar.getView().findViewById(
-                com.google.android.material.R.id.snackbar_text);
-
-        if (text instanceof TextView) {
-            ((TextView) text).setMaxLines(6);
-        }
-
-        snackbar.show();
     }
 
     private void showFailure(ReceiptPrinter.Result result) {
