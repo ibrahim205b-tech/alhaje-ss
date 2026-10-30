@@ -35,7 +35,20 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Restore signing key
+        env:
+          HAJI_KEYSTORE: ${{ secrets.HAJI_KEYSTORE }}
+        run: |
+          if [ -n "$HAJI_KEYSTORE" ]; then
+            echo "$HAJI_KEYSTORE" | base64 -d > "$RUNNER_TEMP/haji.jks"
+            echo "HAJI_KEYSTORE_FILE=$RUNNER_TEMP/haji.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::HAJI_KEYSTORE secret is not set: this APK uses a temporary key and cannot update the installed app."
+          fi
+
       - name: Build APK
+        env:
+          HAJI_KEYSTORE_PASSWORD: ${{ secrets.HAJI_KEYSTORE_PASSWORD }}
         run: gradle --no-daemon assembleDebug
 
       - name: Upload APK

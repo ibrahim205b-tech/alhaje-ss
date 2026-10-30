@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import iq.haji.cashier.data.AppSettings;
+import iq.haji.cashier.data.BackupManager;
 import iq.haji.cashier.data.CsvExporter;
 import iq.haji.cashier.data.ShiftRepository;
 import iq.haji.cashier.model.SalesSummary;
@@ -48,7 +49,7 @@ public class ShiftActivity extends PageActivity {
         LinearLayout hist = UiKit.card(this);
         h.addView(hist, UiKit.weight(this, 4, 12));
         hist.addView(UiKit.title(this, "سجل الورديات"));
-        hist.addView(UiKit.hint(this, "اضغط وردية لعرض تقريرها وتصدير طلباتها"));
+        hist.addView(UiKit.hint(this, "اضغط على أي وردية لعرض تقريرها وطباعته أو تصدير طلباتها"));
         RecyclerView rv = new RecyclerView(this);
         rv.setLayoutManager(new LinearLayoutManager(this));
         adapter = new RowAdapter(r -> ShiftReportDialog.show(this, (Long) r.tag));
@@ -77,8 +78,9 @@ public class ShiftActivity extends PageActivity {
 
         List<RowAdapter.Row> rows = new ArrayList<>();
         for (Shift s : repo.listShifts(200)) {
-            RowAdapter.Row r = new RowAdapter.Row("الوردية #" + s.id,
-                    Fmt.dateTime(s.startedAt) + "  •  " + (s.cashierName == null ? "" : s.cashierName),
+            RowAdapter.Row r = new RowAdapter.Row("وردية " + Fmt.date(s.startedAt),
+                    "من " + Fmt.time(s.startedAt) + (s.closed && s.endedAt > 0 ? " إلى " + Fmt.dateTime(s.endedAt) : " — مفتوحة")
+                            + "  •  " + (s.cashierName == null ? "" : s.cashierName),
                     s.closed ? Fmt.money(s.salesTotal) : null, Long.valueOf(s.id));
             r.badge(s.closed ? "مغلقة" : "مفتوحة", s.closed ? R.color.text_secondary : R.color.success);
             rows.add(r);
@@ -189,6 +191,15 @@ public class ShiftActivity extends PageActivity {
         try {
             Shift closed = repo.closeShift(id, cash, note);
             Ui.toast(this, "أُغلقت الوردية وبدأت وردية جديدة — الفاتورة التالية #1");
+            // نسخة احتياطية كاملة في Download/AlHaji بعد كل إغلاق، تبقى حتى لو حُذف التطبيق.
+            final android.content.Context app = getApplicationContext();
+            new Thread(() -> {
+                try {
+                    BackupManager.exportToDownloads(app);
+                } catch (RuntimeException ignored) {
+                    // تبقى النسخ الداخلية والتصدير اليدوي من الإعدادات
+                }
+            }, "backup").start();
             render();
             ShiftReportDialog.show(this, closed.id);
         } catch (AppException e) {

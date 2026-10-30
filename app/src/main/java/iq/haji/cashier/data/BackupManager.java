@@ -1,10 +1,13 @@
 package iq.haji.cashier.data;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,6 +90,66 @@ public final class BackupManager {
         for (int i = KEEP_AUTO_BACKUPS; i < autos.size(); i++) {
             //noinspection ResultOfMethodCallIgnored
             autos.get(i).delete();
+        }
+    }
+
+    /** مجلد النسخ الظاهر للمستخدم: Download/AlHaji. يبقى حتى لو حُذف التطبيق. */
+    public static final String PUBLIC_FOLDER = Environment.DIRECTORY_DOWNLOADS + "/AlHaji/";
+    private static final int KEEP_PUBLIC_BACKUPS = 30;
+
+    /**
+     * ينسخ القاعدة كاملة إلى مجلد التنزيلات (Download/AlHaji) دون أي إذن.
+     * هذه النسخة تبقى على الجهاز حتى لو حُذف التطبيق، وتُستعاد من الإعدادات ← «استعادة من ملف».
+     */
+    public static synchronized void exportToDownloads(Context ctx) {
+        File backup = createBackup(ctx, "public_");
+        try {
+            String name = "alhaji-backup-"
+                    + new SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US).format(new Date()) + ".db";
+            ContentValues cv = new ContentValues();
+            cv.put(MediaStore.Downloads.DISPLAY_NAME, name);
+            cv.put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream");
+            cv.put(MediaStore.Downloads.RELATIVE_PATH, PUBLIC_FOLDER);
+            cv.put(MediaStore.Downloads.IS_PENDING, 1);
+            Uri collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+            Uri item = ctx.getContentResolver().insert(collection, cv);
+            if (item == null) throw new AppException("تعذر إنشاء ملف النسخة في التنزيلات");
+            try (InputStream in = new FileInputStream(backup);
+                 OutputStream out = ctx.getContentResolver().openOutputStream(item)) {
+                if (out == null) throw new IOException("no stream");
+                copyStream(in, out);
+            } catch (IOException e) {
+                ctx.getContentResolver().delete(item, null, null);
+                throw new AppException("تعذر كتابة النسخة في التنزيلات: " + e.getMessage());
+            }
+            ContentValues done = new ContentValues();
+            done.put(MediaStore.Downloads.IS_PENDING, 0);
+            ctx.getContentResolver().update(item, done, null, null);
+            prunePublic(ctx, collection);
+        } finally {
+            //noinspection ResultOfMethodCallIgnored
+            backup.delete();
+        }
+    }
+
+    /** يُبقي آخر النسخ فقط في مجلد التنزيلات (التطبيق يرى ملفاته هو فقط). */
+    private static void prunePublic(Context ctx, Uri collection) {
+        List<Long> ids = new ArrayList<>();
+        try (Cursor c = ctx.getContentResolver().query(collection,
+                new String[]{MediaStore.Downloads._ID},
+                MediaStore.Downloads.RELATIVE_PATH + "=? AND " + MediaStore.Downloads.DISPLAY_NAME + " LIKE 'alhaji-backup-%'",
+                new String[]{PUBLIC_FOLDER}, MediaStore.Downloads.DATE_ADDED + " DESC")) {
+            while (c != null && c.moveToNext()) ids.add(c.getLong(0));
+        } catch (RuntimeException ignored) {
+            return;
+        }
+        for (int i = KEEP_PUBLIC_BACKUPS; i < ids.size(); i++) {
+            try {
+                ctx.getContentResolver().delete(
+                        android.content.ContentUris.withAppendedId(collection, ids.get(i)), null, null);
+            } catch (RuntimeException ignored) {
+                // الحذف ليس ضرورياً
+            }
         }
     }
 

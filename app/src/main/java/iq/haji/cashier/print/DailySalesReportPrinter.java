@@ -19,6 +19,7 @@ import java.util.List;
 
 import iq.haji.cashier.data.AppSettings;
 import iq.haji.cashier.data.DailySalesReportRepository;
+import iq.haji.cashier.model.Shift;
 import iq.haji.cashier.util.Fmt;
 
 public class DailySalesReportPrinter {
@@ -49,6 +50,53 @@ public class DailySalesReportPrinter {
         end.add(Calendar.DAY_OF_MONTH, 1);
         long to = end.getTimeInMillis();
 
+        print(from, to, new Labels(), callback);
+    }
+
+    /**
+     * يطبع تقرير وردية محددة (الحالية أو سابقة). وردية واحدة تكون مفتوحة في أي وقت،
+     * لذلك طلبات الوردية هي الطلبات بين بدايتها ونهايتها.
+     */
+    public void printShift(Shift shift, Callback callback) {
+        long from = shift.startedAt;
+        long to = (shift.closed && shift.endedAt > 0 ? shift.endedAt : System.currentTimeMillis()) + 1;
+
+        Labels l = new Labels();
+        l.title = "تقرير الوردية";
+        l.summary = "ملخص الوردية";
+        l.net = "صافي مبيعات الوردية";
+        l.footer = "نهاية تقرير الوردية";
+        l.empty = "ماكو مبيعات مسجلة في هذه الوردية";
+        l.noDrivers = "لا توجد طلبات منسوبة لسائق في هذه الوردية";
+        l.sent = "تم إرسال تقرير الوردية " + Fmt.date(shift.startedAt) + " للطابعة";
+        l.header.add(new String[]{"التاريخ:", Fmt.date(shift.startedAt)});
+        l.header.add(new String[]{"بدأت:", Fmt.dateTime(shift.startedAt)});
+        l.header.add(new String[]{"انتهت:", shift.closed && shift.endedAt > 0
+                ? Fmt.dateTime(shift.endedAt) : "ما زالت مفتوحة"});
+        if (shift.cashierName != null && !shift.cashierName.trim().isEmpty()) {
+            l.header.add(new String[]{"الموظف:", shift.cashierName.trim()});
+        }
+        if (shift.closed) {
+            l.header.add(new String[]{"افتتاح الصندوق:", Fmt.money(shift.openingCash)});
+            l.header.add(new String[]{"الصندوق عند الإغلاق:", Fmt.money(shift.closingCash)});
+        }
+        print(from, to, l, callback);
+    }
+
+    /** نصوص التقرير: يومي افتراضياً، وتتغير لتقرير الوردية. */
+    private static final class Labels {
+        String title = "تقرير مبيعات اليوم";
+        String summary = "ملخص اليوم";
+        String net = "صافي مبيعات اليوم";
+        String footer = "نهاية تقرير اليوم";
+        String empty = "ماكو مبيعات مسجلة لليوم حتى تنطبع";
+        String noDrivers = "لا توجد طلبات منسوبة لسائق اليوم";
+        String sent = "تم إرسال تقرير مبيعات اليوم للطابعة";
+        /** أسطر الرأس؛ إذا كانت فارغة يُطبع تاريخ اليوم. */
+        final List<String[]> header = new java.util.ArrayList<>();
+    }
+
+    private void print(long from, long to, Labels labels, Callback callback) {
         PrinterManager.get(context).executor().execute(() -> {
             Bitmap bitmap = null;
             boolean success = false;
@@ -62,11 +110,11 @@ public class DailySalesReportPrinter {
                         repository.load(from, to);
 
                 if (report.orderCount == 0 || report.categories.isEmpty()) {
-                    throw new PrintException("ماكو مبيعات مسجلة لليوم حتى تنطبع");
+                    throw new PrintException(labels.empty);
                 }
 
                 AppSettings settings = new AppSettings(context);
-                bitmap = render(report, settings);
+                bitmap = render(report, settings, labels);
 
                 byte[] bytes = PrinterProtocols.current(settings).encode(
                         bitmap,
@@ -76,7 +124,7 @@ public class DailySalesReportPrinter {
 
                 PrinterManager.get(context).send(bytes);
                 success = true;
-                message = "تم إرسال تقرير مبيعات اليوم للطابعة";
+                message = labels.sent;
 
             } catch (Exception e) {
                 message = e.getMessage() == null
@@ -100,7 +148,8 @@ public class DailySalesReportPrinter {
 
     private Bitmap render(
             DailySalesReportRepository.Report report,
-            AppSettings settings
+            AppSettings settings,
+            Labels labels
     ) throws PrintException {
 
         int paper = settings.paperWidthMm();
@@ -123,7 +172,7 @@ public class DailySalesReportPrinter {
         try {
             // القياس أولاً لمعرفة الارتفاع، ثم الرسم الفعلي بنفس الخطوات.
             Sheet measure = new Sheet(null, width, margin, base);
-            build(measure, report, settings);
+            build(measure, report, settings, labels);
 
             int height = (int) Math.ceil(measure.y) + 24;
             if (height > MAX_HEIGHT) {
@@ -138,7 +187,7 @@ public class DailySalesReportPrinter {
             canvas.drawColor(Color.WHITE);
 
             Sheet draw = new Sheet(canvas, width, margin, base);
-            build(draw, report, settings);
+            build(draw, report, settings, labels);
 
             return bitmap;
 
@@ -151,7 +200,8 @@ public class DailySalesReportPrinter {
     private void build(
             Sheet s,
             DailySalesReportRepository.Report report,
-            AppSettings settings
+            AppSettings settings,
+            Labels labels
     ) {
         float base = s.base;
 
@@ -159,10 +209,15 @@ public class DailySalesReportPrinter {
         s.space(4);
         s.center(settings.restaurantName(), base * 1.45f, true);
         s.space(4);
-        s.banner("تقرير مبيعات اليوم", base * 1.1f);
+        s.banner(labels.title, base * 1.1f);
         s.space(6);
 
-        s.pair("التاريخ:", Fmt.date(report.from), base * 0.95f, false);
+        if (labels.header.isEmpty()) {
+            s.pair("التاريخ:", Fmt.date(report.from), base * 0.95f, false);
+        }
+        for (String[] line : labels.header) {
+            s.pair(line[0], line[1], base * 0.95f, false);
+        }
         s.pair("وقت الطباعة:", Fmt.time(System.currentTimeMillis()),
                 base * 0.95f, false);
         s.pair("عدد الفواتير:", Fmt.number(report.orderCount),
@@ -219,7 +274,7 @@ public class DailySalesReportPrinter {
         s.space(6);
 
         if (report.drivers.isEmpty()) {
-            s.center("لا توجد طلبات منسوبة لسائق اليوم",
+            s.center(labels.noDrivers,
                     base * 0.9f, false);
             s.space(4);
         }
@@ -255,7 +310,7 @@ public class DailySalesReportPrinter {
         // ---------------- الملخص ----------------
         s.doubleRule();
         s.space(4);
-        s.banner("ملخص اليوم", base * 1.05f);
+        s.banner(labels.summary, base * 1.05f);
         s.space(6);
 
         s.pair("عدد الفواتير:", Fmt.number(report.orderCount),
@@ -273,13 +328,13 @@ public class DailySalesReportPrinter {
 
         s.space(4);
         s.boxStart();
-        s.center("صافي مبيعات اليوم", base * 0.95f, true);
+        s.center(labels.net, base * 0.95f, true);
         s.center(Fmt.money(report.invoiceTotal), base * 1.45f, true);
         s.boxEnd();
 
         // ---------------- التذييل ----------------
         s.space(8);
-        s.center("نهاية تقرير اليوم", base * 0.9f, true);
+        s.center(labels.footer, base * 0.9f, true);
         s.center(Fmt.dateTime(System.currentTimeMillis()),
                 base * 0.75f, false);
         s.space(12);

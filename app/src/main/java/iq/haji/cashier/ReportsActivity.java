@@ -266,6 +266,18 @@ public class ReportsActivity extends PageActivity {
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8)
         );
 
+        // طباعة تقرير أي وردية (اليوم، البارحة، أو أي يوم سابق) باختيارها من القائمة.
+        TextView printShift = UiKit.button(
+                this,
+                "🖨 طباعة تقرير وردية سابقة",
+                false
+        );
+        printShift.setOnClickListener(v -> pickShiftToPrint());
+        tools.addView(
+                printShift,
+                UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8)
+        );
+
         left.addView(
                 tools,
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 12)
@@ -743,5 +755,27 @@ public class ReportsActivity extends PageActivity {
                         CsvExporter.shareIntent(this, file)
                 )
         );
+    }
+
+    /** قائمة الورديات بالتاريخ؛ الضغط على وردية يطبع تقريرها مباشرة. */
+    private void pickShiftToPrint() {
+        final List<Shift> list = new ShiftRepository(this).listShifts(120);
+        if (list.isEmpty()) {
+            Ui.toast(this, "لا توجد ورديات");
+            return;
+        }
+        String[] labels = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            Shift s = list.get(i);
+            labels[i] = "وردية " + Fmt.date(s.startedAt) + "   " + Fmt.time(s.startedAt)
+                    + (s.closed && s.endedAt > 0 ? " ← " + Fmt.time(s.endedAt) + "   " + Fmt.money(s.salesTotal)
+                    : "   (مفتوحة)");
+        }
+        androidx.appcompat.app.AlertDialog d = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("اختر الوردية للطباعة")
+                .setItems(labels, (x, which) -> ShiftReportDialog.print(this, list.get(which)))
+                .setNegativeButton("إلغاء", null)
+                .create();
+        Ui.showRtl(d);
     }
 }

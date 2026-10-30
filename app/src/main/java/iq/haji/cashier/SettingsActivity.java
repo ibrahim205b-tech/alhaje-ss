@@ -414,6 +414,26 @@ public class SettingsActivity extends PageActivity {
                 b2,
                 UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
 
+        // نسخة في Download/AlHaji: تبقى على الجهاز حتى لو حُذف التطبيق.
+        TextView bDownloads = UiKit.button(
+                this,
+                "حفظ نسخة في مجلد التنزيلات (Download/AlHaji)",
+                false);
+
+        bDownloads.setOnClickListener(v ->
+                this.<Boolean>bg(
+                        () -> {
+                            BackupManager.exportToDownloads(this);
+                            return true;
+                        },
+                        ok -> Ui.toast(
+                                this,
+                                "حُفظت النسخة في مجلد التنزيلات ← AlHaji")));
+
+        bk.addView(
+                bDownloads,
+                UiKit.lp(this, UiKit.MATCH, UiKit.WRAP, 8));
+
         TextView b3 = UiKit.button(
                 this,
                 "استعادة من ملف",

@@ -65,6 +65,11 @@ public class SplashActivity extends BaseActivity {
             if (f.getName().startsWith("backup_") && now - f.lastModified() < DAY_MS) return;
         }
         BackupManager.createBackup(app, "backup_");
+        try {
+            BackupManager.exportToDownloads(app);
+        } catch (RuntimeException ignored) {
+            // النسخة الداخلية تمت؛ فشل نسخة التنزيلات لا يمنع التشغيل
+        }
     }
 
     private void goMain() {

@@ -16,10 +16,11 @@ import iq.haji.cashier.data.ShiftRepository;
 import iq.haji.cashier.model.SalesSummary;
 import iq.haji.cashier.model.Shift;
 import iq.haji.cashier.model.TopItem;
+import iq.haji.cashier.print.DailySalesReportPrinter;
 import iq.haji.cashier.util.Fmt;
 import iq.haji.cashier.util.Ui;
 
-/** تقرير وردية (مفتوحة أو مغلقة) مع تصدير CSV لطلباتها. */
+/** تقرير وردية (مفتوحة أو مغلقة) مع طباعته وتصدير CSV لطلباتها. */
 public final class ShiftReportDialog {
     private ShiftReportDialog() {}
 
@@ -80,12 +81,22 @@ public final class ShiftReportDialog {
         sv.addView(tv);
 
         AlertDialog d = new AlertDialog.Builder(a)
-                .setTitle("تقرير الوردية #" + shiftId)
+                .setTitle("تقرير الوردية " + Fmt.date(s.startedAt))
                 .setView(sv)
-                .setPositiveButton("إغلاق", null)
+                .setPositiveButton("🖨 طباعة التقرير", (x, w) -> print(a, s))
+                .setNegativeButton("إغلاق", null)
                 .setNeutralButton("تصدير طلبات الوردية CSV", (x, w) -> export(a, shiftId))
                 .create();
         Ui.showRtl(d);
+    }
+
+    /** يطبع تقرير الوردية (الأصناف حسب الأقسام، السائقون، والملخص). */
+    public static void print(final Activity a, final Shift s) {
+        Ui.toast(a, "جارٍ طباعة تقرير الوردية " + Fmt.date(s.startedAt) + "...");
+        new DailySalesReportPrinter(a).printShift(s, (ok, msg) -> {
+            if (a.isFinishing() || a.isDestroyed()) return;
+            Ui.toast(a, msg);
+        });
     }
 
     private static void export(final Activity a, final long shiftId) {

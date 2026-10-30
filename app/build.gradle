@@ -10,12 +10,33 @@ android {
         applicationId "iq.haji.cashier"
         minSdk 31
         targetSdk 35
-        versionCode 1
-        versionName "1.0.0"
+        // رقم الإصدار يزداد مع كل بناء على GitHub حتى يقبل الجهاز التحديث فوق النسخة السابقة.
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger() + 100)
+        versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+    }
+
+    // مفتاح توقيع ثابت من أسرار GitHub (لا يُحفظ في المستودع): كل نسخة جديدة تُثبَّت فوق القديمة وتبقى البيانات.
+    // بدونه يوقَّع كل بناء بمفتاح عشوائي فيرفض الجهاز التحديث ويضطر المستخدم لحذف التطبيق.
+    def hajiKey = file(System.getenv("HAJI_KEYSTORE_FILE") ?: "/nonexistent")
+    def hajiPass = System.getenv("HAJI_KEYSTORE_PASSWORD")
+    def hasHajiKey = hajiKey.exists() && hajiPass
+    signingConfigs {
+        haji {
+            if (hasHajiKey) {
+                storeFile hajiKey
+                storePassword hajiPass
+                keyAlias 'haji'
+                keyPassword hajiPass
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            if (hasHajiKey) signingConfig signingConfigs.haji
+        }
         release {
+            if (hasHajiKey) signingConfig signingConfigs.haji
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
