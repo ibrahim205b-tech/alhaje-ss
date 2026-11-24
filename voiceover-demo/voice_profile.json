@@ -1,0 +1,21 @@
+{
+  "name": "Iraqi narrator (approved default)",
+  "approved_by_user": "2026-11-24",
+  "service": "Speko audio.synthesize",
+  "request_body_template": {
+    "text": "<SCRIPT — Iraqi dialect; spell Iraqi qaf as گ, e.g. ضيگ، صدگني، بوكت>",
+    "intent": { "language": "ar", "optimizeFor": "accuracy" },
+    "voice": "Charon",
+    "model": "gemini-3.8-flash-tts",
+    "constraints": { "allowedProviders": { "tts": ["google-tts"] } },
+    "instructions": "You are a mature Iraqi man from Baghdad in his late forties, a professional documentary narrator, speaking in your own natural Baghdadi Iraqi dialect — not Modern Standard Arabic, not Gulf, Egyptian or Levantine. The letter گ is the Iraqi hard G (ضيگ = ḍīg, صدگني = ṣaddigni). بوكت = b-wakit, إحنا = iḥna, شنو = shinu. Voice: low, warm, deep and clear; calm and confident. Emotion is sincere and understated, like a quiet word to a friend — never acting, no exaggerated sadness, no big pitch swings. Natural fluent Iraqi conversational pace, the way a Baghdadi actually talks: not slow, not rushed. The whole read must fit in <TARGET_SECONDS minus ~2> seconds. Keep pauses short and natural: a light breath between sentences, a brief beat at commas. Sentence endings fall softly."
+  },
+  "take_selection": "The engine varies between takes. Render 2–4 takes and keep the one closest to the reference: median pitch about 100 Hz, pitch spread about 4–4.5 semitones, every word correct in speech recognition, qaf heard as g.",
+  "post_production": [
+    "Shorten pauses only (about 0.4 s between sentences, about 0.3 s at commas); keep breaths; no time-stretch or pitch shift",
+    "Resample 24 kHz to 48 kHz (soxr), 65 Hz high-pass, 11.5 kHz low-pass, 2:1 compression (threshold -22 dB)",
+    "Target -16 LUFS integrated, true peak at or below -2 dBTP, no clipping",
+    "Deliver audio only (MP3 320 kb/s + WAV 48 kHz/24-bit) unless the user asks for video"
+  ],
+  "reference_audio": "voiceover-demo/iraqi_voice.mp3"
+}
