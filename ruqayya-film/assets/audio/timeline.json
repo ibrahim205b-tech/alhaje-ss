@@ -1,193 +1,193 @@
 {
- "tempo": 1.18,
+ "tempo": 1.1,
  "segments": [
   {
    "id": "A",
    "start": 3.9,
-   "end": 7.569
+   "end": 7.836
   },
   {
    "id": "B",
-   "start": 7.87,
-   "end": 8.844
+   "start": 8.136,
+   "end": 9.182
   },
   {
    "id": "C",
-   "start": 9.244,
-   "end": 12.024
+   "start": 9.582,
+   "end": 12.564
   },
   {
    "id": "D",
-   "start": 12.384,
-   "end": 15.918
+   "start": 12.924,
+   "end": 16.715
   },
   {
    "id": "E",
-   "start": 16.418,
-   "end": 17.901
+   "start": 17.215,
+   "end": 18.805
   },
   {
    "id": "F",
-   "start": 18.101,
-   "end": 23.338
+   "start": 19.005,
+   "end": 24.624
   },
   {
    "id": "G",
-   "start": 23.838,
-   "end": 27.482
+   "start": 25.124,
+   "end": 29.033
   },
   {
    "id": "H",
-   "start": 28.532,
-   "end": 30.185
+   "start": 30.083,
+   "end": 31.855
   },
   {
    "id": "I",
-   "start": 30.305,
-   "end": 32.271
+   "start": 31.975,
+   "end": 34.085
   },
   {
    "id": "J",
-   "start": 32.651,
-   "end": 37.142
+   "start": 34.465,
+   "end": 39.283
   },
   {
    "id": "K",
-   "start": 37.642,
-   "end": 40.591
+   "start": 39.783,
+   "end": 42.946
   },
   {
    "id": "L",
-   "start": 40.811,
-   "end": 45.159
+   "start": 43.166,
+   "end": 47.83
   }
  ],
  "captions": [
   {
    "start": 3.9,
-   "end": 4.815,
+   "end": 4.882,
    "text": "اسمي رقيّة…",
    "hidden": false
   },
   {
-   "start": 4.942,
-   "end": 7.569,
+   "start": 5.018,
+   "end": 7.836,
    "text": "عمري واحدٌ وعشرون عاماً، من كربلاء.",
    "hidden": false
   },
   {
-   "start": 7.87,
-   "end": 8.844,
+   "start": 8.136,
+   "end": 9.182,
    "text": "أحبُّ التصوير.",
    "hidden": false
   },
   {
-   "start": 9.244,
-   "end": 12.024,
+   "start": 9.582,
+   "end": 12.564,
    "text": "كنتُ أصوّر الورد، والشجر، وضوء المساء.",
    "hidden": false
   },
   {
-   "start": 12.384,
-   "end": 13.46,
+   "start": 12.924,
+   "end": 14.078,
    "text": "ثمّ صارت صوري…",
    "hidden": false
   },
   {
-   "start": 13.46,
-   "end": 15.918,
+   "start": 14.078,
+   "end": 16.715,
    "text": "ممرّات المستشفى، وأكياس العلاج.",
    "hidden": false
   },
   {
-   "start": 16.418,
-   "end": 17.901,
+   "start": 17.215,
+   "end": 18.805,
    "text": "أُصبتُ بسرطان العظام.",
    "hidden": false
   },
   {
-   "start": 18.101,
-   "end": 20.101,
+   "start": 19.005,
+   "end": 21.151,
    "text": "استأصلوا جزءاً من عظام حوضي،",
    "hidden": false
   },
   {
-   "start": 20.118,
-   "end": 23.338,
+   "start": 21.169,
+   "end": 24.624,
    "text": "وتحمّلتُ إحدى عشرة جرعةً من العلاج الكيميائي.",
    "hidden": false
   },
   {
-   "start": 23.838,
-   "end": 25.194,
+   "start": 25.124,
+   "end": 26.578,
    "text": "لكنّ الفحص الأخير…",
    "hidden": false
   },
   {
-   "start": 25.279,
-   "end": 27.482,
+   "start": 26.669,
+   "end": 29.033,
    "text": "أظهرَ أنّ المرض ما زال يتقدّم.",
    "hidden": false
   },
   {
-   "start": 28.532,
-   "end": 30.185,
+   "start": 30.083,
+   "end": 31.855,
    "text": "أنا لا أطلبُ المستحيل…",
    "hidden": true
   },
   {
-   "start": 30.305,
-   "end": 32.271,
+   "start": 31.975,
+   "end": 34.085,
    "text": "أطلبُ فرصةً أخرى للحياة.",
    "hidden": true
   },
   {
-   "start": 32.651,
-   "end": 34.625,
+   "start": 34.465,
+   "end": 36.583,
    "text": "ما زلتُ متمسّكةً بالأمل…",
    "hidden": false
   },
   {
-   "start": 34.625,
-   "end": 37.142,
+   "start": 36.583,
+   "end": 39.283,
    "text": "وأؤمن أنّ الفرج قد يأتي على أيدي الناس.",
    "hidden": false
   },
   {
-   "start": 37.642,
-   "end": 40.591,
+   "start": 39.783,
+   "end": 42.946,
    "text": "قصّتي كاملة في الرابط الموجود في صفحتي.",
    "hidden": false
   },
   {
-   "start": 40.811,
-   "end": 42.871,
+   "start": 43.166,
+   "end": 45.375,
    "text": "وإن لم تستطع أن تساعدني…",
    "hidden": false
   },
   {
-   "start": 42.913,
-   "end": 45.159,
+   "start": 45.421,
+   "end": 47.83,
    "text": "فلا تجعل قصّتي تتوقّف عندك.",
    "hidden": true
   }
  ],
  "anchors": {
-  "word_ward": 9.905,
-  "word_shajar": 10.414,
-  "word_daw": 11.176,
-  "word_thumma": 12.485,
-  "word_mamarrat": 13.502,
-  "word_akyas": 14.858,
-  "word_11": 20.796,
-  "word_lakin": 23.923,
-  "word_yataqaddam": 26.804,
-  "word_faraj": 35.261,
-  "word_aydi": 36.447,
-  "word_fala": 42.998,
-  "shutter": 8.994
+  "word_ward": 10.291,
+  "word_shajar": 10.836,
+  "word_daw": 11.655,
+  "word_thumma": 13.033,
+  "word_mamarrat": 14.124,
+  "word_akyas": 15.578,
+  "word_11": 21.896,
+  "word_lakin": 25.215,
+  "word_yataqaddam": 28.305,
+  "word_faraj": 37.265,
+  "word_aydi": 38.537,
+  "word_fala": 45.512,
+  "shutter": 9.332
  },
  "vo_start": 3.9,
- "vo_end": 45.159,
- "total": 48.159
+ "vo_end": 47.83,
+ "total": 50.83
 }

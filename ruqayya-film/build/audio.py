@@ -23,7 +23,7 @@ AUD = ROOT / "assets" / "audio"
 TMP = AUD / "work"
 TMP.mkdir(parents=True, exist_ok=True)
 SR = 48000
-TEMPO = 1.18          # voice pace (1.0 = as generated; the take was too slow)
+TEMPO = 1.10          # voice pace (1.0 = as generated; the take was too slow)
 VO_START = 3.90       # the verse owns the first four seconds
 END_HOLD = 3.00       # end card after the last word
 rng = np.random.default_rng(7)
@@ -112,10 +112,11 @@ for sid, a, b, gap in SEGMENTS:
     out = TMP / f"vo_{sid}.wav"
     ff("-i", str(raw), "-af",
        f"atrim=start={a}:end={b},asetpts=PTS-STARTPTS,"
-       "highpass=f=75,lowpass=f=11000,"
-       "equalizer=f=220:t=q:w=1:g=1.5,equalizer=f=3200:t=q:w=1.2:g=2,"
-       "acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
-       f"rubberband=tempo={TEMPO}:pitchq=quality:formant=preserved:transients=smooth,"
+       "highpass=f=90,"
+       f"rubberband=tempo={TEMPO}:pitchq=quality:formant=preserved:transients=crisp:detector=percussive:window=short,"
+       "equalizer=f=300:t=q:w=1.2:g=-2.5,equalizer=f=3000:t=q:w=1.0:g=3.5,"
+       "equalizer=f=8000:t=h:w=2000:g=2,"
+       "acompressor=threshold=-24dB:ratio=3.2:attack=5:release=90:makeup=3,"
        "aresample=48000,afade=t=in:d=0.012,areverse,afade=t=in:d=0.04,areverse",
        "-ac", "2", str(out))
     x = read(out)
@@ -399,12 +400,12 @@ def noise(sec):
 
 # room tone: a quiet room, always there (also through the silent beat)
 room = lp(np.stack([noise(TOTAL + 1), noise(TOTAL + 1)], 1), 500)[:N]
-room *= 0.010
+room *= 0.006
 # hospital air: ventilation + faint fluorescent hum (D..G)
 hs, he = D["start"] - 0.3, cut_at
 hn = int((he - hs) * SR)
 th = np.arange(hn) / SR
-air = bp(np.stack([noise(he - hs), noise(he - hs)], 1)[:hn], 150, 1200) * 0.012
+air = bp(np.stack([noise(he - hs), noise(he - hs)], 1)[:hn], 150, 1200) * 0.007
 hum = (np.sin(2 * np.pi * 100 * th) + 0.4 * np.sin(2 * np.pi * 200 * th) + 0.15 * np.sin(2 * np.pi * 300 * th)) * 0.0022
 envh = np.minimum(1, np.minimum(th / 0.8, (he - hs - th) / 0.05))
 add(sfx, (air + hum[:, None]) * envh[:, None], hs)
@@ -465,15 +466,16 @@ for i, v in enumerate(e_d):
     cur = a1 * cur + (1 - a1) * v if v > cur else r1 * cur + (1 - r1) * v
     g[i] = cur
 duck = np.repeat(g, dec)[:N]
-duck = 1 - 0.55 * np.clip(duck * 3, 0, 1)           # ~ -7 dB under speech
+duck = 1 - 0.75 * np.clip(duck * 3, 0, 1)           # ~ -12 dB under speech
 
-mix = vo * 1.0 + music * 0.55 * duck[:, None] + sfx
+music = music - 0.5 * bp(music, 1400, 4200)          # leave room for consonants
+mix = vo * 1.0 + music * 0.40 * duck[:, None] + sfx
 mix = hp(mix, 25).astype(np.float32)
 pre = TMP / "mix_pre.wav"
 wavfile.write(pre, SR, (mix[: int(TOTAL * SR)] / max(1e-9, np.abs(mix).max()) * 0.8).astype(np.float32))
 
 # stems (for anyone re-editing in a DAW)
-for name, x in (("stem_voice", vo), ("stem_music", music * 0.55 * duck[:, None]), ("stem_sfx", sfx)):
+for name, x in (("stem_voice", vo), ("stem_music", music * 0.40 * duck[:, None]), ("stem_sfx", sfx)):
     wavfile.write(TMP / f"{name}.wav", SR, x[: int(TOTAL * SR)].astype(np.float32))
 
 # two-pass EBU R128 to -14 LUFS, -1 dBTP
