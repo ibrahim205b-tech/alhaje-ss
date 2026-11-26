@@ -1,0 +1,6 @@
+source/
+assets/photos/
+output/*.mp4
+output/stills/
+assets/audio/work/
+__pycache__/
